@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- @@PAGE-START@@ -->
+<title>계란이의 모험</title>
+<meta name="description" content="냉장고를 탈출한 계란이가 꼬꼬엄마 품을 찾아 떠나는 선택형 텍스트 어드벤처">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Jua&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">계란이의 <b>모험</b></div>
+    <div class="hud" id="hud" hidden>
+      <div class="meter" title="꼬꼬엄마에게 가기 전에 20℃ 넘게 데워 두면 좋아요">
+        <span class="lbl">온기</span>
+        <div class="bar"><i id="tempFill"></i><span class="tick"></span></div>
+        <span id="tempVal">4.0℃</span>
+      </div>
+      <div class="shell-state">
+        <span class="lbl">껍질</span>
+        <span id="cracks" role="img" aria-label="껍질의 금 0개, 최대 3개"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="stack">
+    <!-- 타이틀 -->
+    <section class="screen" id="title">
+      <div class="hero">
+        <div class="egg big" id="titleEgg"></div>
+        <h1>계란이의 <em>모험</em></h1>
+        <p>할머니 댁 냉장고 맨 끝자리, 내일 아침 계란말이가 될 차례인 계란이. 들판 너머 꼬꼬엄마 품에 안겨 병아리가 될 수 있을까요? 상황을 읽고 A, B, C 중 하나를 고르세요. 고른 길에 따라 결말이 달라져요.</p>
+      </div>
+      <ul class="rules">
+        <li><b>온기</b>냉장고에서 막 나온 계란이는 4℃예요. 따뜻한 곳을 지나면 올라가요.</li>
+        <li><b>껍질</b>떨어지거나 부딪히면 금이 가요. 금이 3개면 와장창!</li>
+        <li><b>엔딩 13개</b>한 번 본 엔딩은 아래 도감에 모여요.</li>
+      </ul>
+      <div class="row center">
+        <button type="button" class="btn" id="startBtn">모험 시작</button>
+      </div>
+    </section>
+
+    <!-- 이야기 진행 -->
+    <section class="screen" id="play" hidden>
+      <div class="scene-head">
+        <span class="chap" id="chap">1장</span>
+        <span class="place" id="place">냉장고 문 칸</span>
+      </div>
+      <div class="egg" id="egg"></div>
+      <p class="say" id="say" hidden></p>
+      <div class="narr" id="text" aria-live="polite"></div>
+      <div class="choices" id="choices"></div>
+      <div class="foot">
+        <span id="steps"></span>
+        <div class="row">
+          <button type="button" class="btn ghost" id="undo">한 걸음 되돌리기</button>
+          <button type="button" class="btn ghost" id="restart">처음으로</button>
+        </div>
+      </div>
+      <p class="hint">글을 누르면 바로 다 보여요. 키보드 A·B·C 또는 1·2·3으로도 고를 수 있어요.</p>
+    </section>
+
+    <!-- 엔딩 -->
+    <section class="screen" id="end" hidden>
+      <div class="end-head">
+        <span class="kind" id="endKind">해피 엔딩</span>
+        <div class="row center">
+          <span class="end-no" id="endNo">엔딩 01 / 13</span>
+          <span class="new" id="endNew">새로 발견!</span>
+        </div>
+        <h2 id="endTitle"></h2>
+      </div>
+      <div class="egg big" id="endEgg"></div>
+      <p class="say" id="endSay" hidden></p>
+      <div class="narr" id="endText"></div>
+      <dl class="stats" id="endStats"></dl>
+      <div class="row center">
+        <button type="button" class="btn" id="endRestart">처음부터 다시</button>
+        <button type="button" class="btn ghost" id="endUndo">마지막 선택 되돌리기</button>
+      </div>
+    </section>
+
+    <!-- 엔딩 도감 -->
+    <section class="screen" id="dex">
+      <div class="dex-head">
+        <h2>엔딩 도감</h2>
+        <span id="dexCount">0 / 13</span>
+      </div>
+      <ul class="dex-grid" id="dexGrid"></ul>
+    </section>
+  </main>
+</div>
+<script src="story.js"></script>
+<script src="game.js"></script>
+<!-- @@PAGE-END@@ -->
+</body>
+</html>
