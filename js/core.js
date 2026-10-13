@@ -33,29 +33,75 @@ window.Store = (() => {
   function emptyBook() {
     return { endings: {}, scenes: {}, stats: { plays: 0, finished: 0, crashes: 0, choices: 0, bestTrue: null } };
   }
-  function loadBook() {
-    const saved = read(KEY.book, null);
+  function normalize(saved) {
     const base = emptyBook();
-    const book = saved && typeof saved === 'object'
-      ? { ...base, ...saved, stats: { ...base.stats, ...(saved.stats || {}) } }
-      : base;
-    // v1에서 본 엔딩은 도감으로 이어받는다.
+    if (!saved || typeof saved !== 'object') return base;
+    return { endings: { ...(saved.endings || {}) }, scenes: { ...(saved.scenes || {}) }, stats: { ...base.stats, ...(saved.stats || {}) } };
+  }
+  // v1에서 본 엔딩은 게스트 도감으로 이어받는다.
+  function withV1(book) {
     const old = read(KEY.v1, null);
     if (Array.isArray(old)) old.forEach((id) => { if (!book.endings[id]) book.endings[id] = { n: 1, first: Date.now() }; });
     return book;
   }
 
+  // 기록은 프로필별로 따로 둔다. 게스트는 egg2:book, 로그인한 계정은 egg2:book:<uid>
+  let profile = 'guest';
+  const keyOf = (base) => (profile === 'guest' ? base : `${base}:${profile}`);
+  const loadBook = () => (profile === 'guest' ? withV1(normalize(read(KEY.book, null))) : normalize(read(keyOf(KEY.book), null)));
+
+  // 두 기록 합치기. max: 같은 계정의 두 사본(이 기기 ↔ 클라우드), sum: 게스트 기록을 계정으로 옮길 때
+  function merge(a, b, mode = 'max') {
+    const out = normalize(a);
+    const src = normalize(b);
+    const add = (x, y) => (mode === 'sum' ? x + y : Math.max(x, y));
+    Object.entries(src.endings).forEach(([id, r]) => {
+      const cur = out.endings[id];
+      out.endings[id] = cur
+        ? { n: add(cur.n || 1, r.n || 1), first: Math.min(cur.first || Date.now(), r.first || Date.now()) }
+        : { n: r.n || 1, first: r.first || Date.now() };
+    });
+    Object.keys(src.scenes).forEach((id) => { out.scenes[id] = 1; });
+    ['plays', 'finished', 'crashes', 'choices'].forEach((k) => { out.stats[k] = add(out.stats[k] || 0, src.stats[k] || 0); });
+    const best = [out.stats.bestTrue, src.stats.bestTrue].filter((v) => v != null);
+    out.stats.bestTrue = best.length ? Math.min(...best) : null;
+    return out;
+  }
+
   const settings = { ...DEFAULTS, ...read(KEY.settings, {}) };
   let book = loadBook();
+  const listeners = [];
+  const changed = (what) => listeners.forEach((fn) => fn(what));
+  function saveBook() {
+    write(keyOf(KEY.book), book);
+    changed('book');
+  }
 
   return {
     settings,
     get book() { return book; },
+    get profile() { return profile; },
     set(key, value) {
       settings[key] = value;
       write(KEY.settings, settings);
+      if (key === 'skin') changed('skin');
     },
-    saveBook() { write(KEY.book, book); },
+    // 기록이 바뀔 때마다 불린다 (로그인 상태면 계정에 올린다).
+    onChange(fn) { listeners.push(fn); },
+    useProfile(id) {
+      profile = id || 'guest';
+      book = loadBook();
+    },
+    replaceBook(next) {
+      book = normalize(next);
+      write(keyOf(KEY.book), book);
+    },
+    merge,
+    // 게스트 기록을 꺼내 본다 (계정으로 옮긴 뒤에는 clearGuest로 비운다).
+    guestData() {
+      return { book: withV1(normalize(read(KEY.book, null))), run: read(KEY.run, null) };
+    },
+    clearGuest() { [KEY.book, KEY.run, KEY.v1].forEach(remove); },
     // 엔딩 기록. 처음 본 엔딩이면 true
     markEnding(id, steps, kind) {
       const fresh = !book.endings[id];
@@ -65,22 +111,35 @@ window.Store = (() => {
       book.stats.finished += 1;
       if (id === 'e_crash') book.stats.crashes += 1;
       if (kind === 'true' && (book.stats.bestTrue == null || steps < book.stats.bestTrue)) book.stats.bestTrue = steps;
-      write(KEY.book, book);
+      saveBook();
       return fresh;
     },
     markScene(id) {
       if (book.scenes[id]) return;
       book.scenes[id] = 1;
-      write(KEY.book, book);
+      saveBook();
     },
-    countPlay() { book.stats.plays += 1; write(KEY.book, book); },
-    countChoice() { book.stats.choices += 1; write(KEY.book, book); },
-    loadRun() { return read(KEY.run, null); },
-    saveRun(run) { return write(KEY.run, run); },
-    clearRun() { remove(KEY.run); },
+    countPlay() { book.stats.plays += 1; saveBook(); },
+    countChoice() { book.stats.choices += 1; saveBook(); },
+    loadRun() { return read(keyOf(KEY.run), null); },
+    saveRun(run) {
+      const ok = write(keyOf(KEY.run), { ...run, savedAt: Date.now() });
+      changed('run');
+      return ok;
+    },
+    replaceRun(run) {
+      if (run) write(keyOf(KEY.run), run);
+      else remove(keyOf(KEY.run));
+    },
+    clearRun() {
+      remove(keyOf(KEY.run));
+      changed('run');
+    },
     resetAll() {
-      [KEY.run, KEY.book, KEY.v1].forEach(remove);
+      [keyOf(KEY.run), keyOf(KEY.book)].forEach(remove);
+      if (profile === 'guest') remove(KEY.v1);
       book = emptyBook();
+      changed('reset');
     },
   };
 })();

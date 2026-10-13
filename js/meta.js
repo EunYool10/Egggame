@@ -1,6 +1,6 @@
 // 계란이의 모험 v2 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '2.3',
+  version: '2.4',
 
   // 가방에 들어가는 아이템
   items: {
@@ -41,34 +41,24 @@ window.META = {
 
   byline: '개발 은율 · 아이디어 지우', // 타이틀 화면 아래에 보이는 한 줄
 
+  // 관리자 계정: 'egggame:' + 소문자 이메일의 SHA-256 해시 (공개 저장소에 이메일을 그대로 두지 않으려고 해시만 둔다).
+  // Google 로그인으로 인증된 이메일만 비교한다. 추가 방법은 README '관리자' 참고.
+  admins: [
+    '45c42b6afd97b67c396817dedfbfb5a2409b06a98b95c4e68101b627f28a0cf7',
+    '157fb2db64ea03c6354a5af3febcc7d48be75a73863385b8f5c9de9c09212806',
+  ],
+
   // 크레딧. names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 (specsTitle이 표 제목)
   credits: [
-    {
-      role: '개발',
-      names: ['은율'],
-      specsTitle: '개발에 사용된 기술',
-      specs: [
-        ['언어', 'HTML5 · CSS3 · JavaScript (ES2020)'],
-        ['화면', 'CSS Grid · Flexbox · CSS 변수로 만든 라이트 · 다크 테마'],
-        ['그래픽', 'SVG, 계란이와 배경을 코드로 직접 그림'],
-        ['애니메이션', 'CSS Animation · requestAnimationFrame (미니게임)'],
-        ['사운드', 'Web Audio API, 효과음과 배경 음악 실시간 합성'],
-        ['저장', 'Web Storage API (localStorage)'],
-        ['웹 API', 'Clipboard API (결과 복사) · Vibration API (진동)'],
-        ['서버', 'Node.js 내장 http 모듈, 외부 패키지 없음'],
-        ['배포', 'GitHub · Render'],
-        ['개발 도구', 'Visual Studio Code · Git · Claude Code'],
-      ],
-    },
+    { role: '개발', names: ['은율'] },
     { role: '전체 테스트', names: ['은율', '지우'] },
     { role: '아이디어', names: ['지우'] },
     { role: '공동투자', names: ['YDS', 'TDS', 'TDSHQ', 'TDSNT'] },
-    { role: '글꼴', names: ['Jua · Gowun Batang · Gowun Dodum', 'Google Fonts, SIL Open Font License'] },
     {
       role: '출연',
       names: ['계란이', '노른자 할아버지', '쌍란 흰둥이', '고양이 나비', '진돗개 백구', '허수아비', '족제비', '꼬꼬엄마', '도윤이', '할머니 · 할아버지', '가재 왕국 시민 서른 마리'],
     },
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
   ],
-  copyright: '© 2026 계란이의 모험 · v2.3',
+  copyright: '© 2026 계란이의 모험 · v2.4',
 };

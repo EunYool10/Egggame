@@ -1,0 +1,139 @@
+rules_version = '2';
+
+// 계란이의 모험 — Firestore 보안 규칙 (Firebase 프로젝트 egggame-eunyool, (default) 데이터베이스, 서울 리전)
+// 배포: firebase deploy --only firestore:rules (firebase.json, .firebaserc 참고)
+// 엔딩·장면·스킨을 추가하면 아래 endingIds / sceneIds / skinIds 목록도 함께 고쳐야 저장된다.
+//
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: players
+// Document ID: the player's Firebase Auth uid (Google sign-in)
+// Fields:
+//   - book: map (required) - the player's ending book
+//       - endings: map<endingId, int> (required, known ending ids only, each 1..100000) - times each ending was seen
+//       - scenes: list<string> (required, <= 14 items, known scene ids only) - scenes visited at least once
+//       - stats: map (required, all five keys)
+//           - plays, finished, crashes, choices: int (0..10,000,000)
+//           - bestTrue: int (1..1000) or null - fewest choices to the true ending
+//   - skin: string (optional, one of the known skin ids) - the egg skin being worn
+//   - run: string (optional, <= 40,000 chars) or null - JSON of the in-progress adventure (이어하기)
+//   - updatedAt: timestamp (required, must equal request.time) - last sync time
+//
+// No PII is stored: the display name and email come from the auth token on the client only.
+// The app only reads and writes its own document by id (no list queries).
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // The document never carries a uid field (the document id is the uid); these keep it that way.
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function endingIds() {
+      return ['e_hatch', 'e_party', 'e_helmet', 'e_late', 'e_school', 'e_easter', 'e_treasure', 'e_seoul',
+        'e_crayfish', 'e_jangjorim', 'e_omelet', 'e_baked', 'e_tteok', 'e_forest', 'e_crash'];
+    }
+
+    function sceneIds() {
+      return ['start', 'elder', 'swap', 'kitchen', 'ondol', 'cat', 'basket', 'market', 'yard', 'dog', 'alley',
+        'stream', 'field', 'storm'];
+    }
+
+    function skinIds() {
+      return ['white', 'brown', 'quail', 'blue', 'easter', 'jangjorim', 'baked', 'tteok', 'bandage', 'helmet',
+        'crown', 'beret', 'party', 'gold', 'dino'];
+    }
+
+    // An ending count, if present, is a whole number between 1 and 100000.
+    function isCount(m, k) {
+      return !(k in m) || (m[k] is int && m[k] >= 1 && m[k] <= 100000);
+    }
+
+    function isValidEndings(m) {
+      return m is map && m.keys().hasOnly(endingIds()) &&
+        isCount(m, 'e_hatch') && isCount(m, 'e_party') && isCount(m, 'e_helmet') && isCount(m, 'e_late') &&
+        isCount(m, 'e_school') && isCount(m, 'e_easter') && isCount(m, 'e_treasure') && isCount(m, 'e_seoul') &&
+        isCount(m, 'e_crayfish') && isCount(m, 'e_jangjorim') && isCount(m, 'e_omelet') && isCount(m, 'e_baked') &&
+        isCount(m, 'e_tteok') && isCount(m, 'e_forest') && isCount(m, 'e_crash');
+    }
+
+    function isValidScenes(l) {
+      return l is list && l.size() <= 14 && l.hasOnly(sceneIds());
+    }
+
+    function isStat(m, k) {
+      return m[k] is int && m[k] >= 0 && m[k] <= 10000000;
+    }
+
+    function isValidStats(m) {
+      return m is map &&
+        m.keys().hasOnly(['plays', 'finished', 'crashes', 'choices', 'bestTrue']) &&
+        m.keys().hasAll(['plays', 'finished', 'crashes', 'choices', 'bestTrue']) &&
+        isStat(m, 'plays') && isStat(m, 'finished') && isStat(m, 'crashes') && isStat(m, 'choices') &&
+        (m.bestTrue == null || (m.bestTrue is int && m.bestTrue >= 1 && m.bestTrue <= 1000));
+    }
+
+    function isValidBook(b) {
+      return b is map &&
+        b.keys().hasOnly(['endings', 'scenes', 'stats']) &&
+        b.keys().hasAll(['endings', 'scenes', 'stats']) &&
+        isValidEndings(b.endings) && isValidScenes(b.scenes) && isValidStats(b.stats);
+    }
+
+    // ===============================================================
+    // Domain Validator (used on BOTH create and update)
+    // ===============================================================
+    function isValidPlayer(data) {
+      return hasOnlyAllowedFields(['book', 'skin', 'run', 'updatedAt']) &&
+        hasRequiredFields(['book', 'updatedAt']) &&
+        isValidBook(data.book) &&
+        (!('skin' in data) || (data.skin is string && data.skin in skinIds())) &&
+        (!('run' in data) || data.run == null || (data.run is string && data.run.size() <= 40000)) &&
+        data.updatedAt == request.time &&
+        uidUnchanged();
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Each player reads and writes only their own save. Nobody can list the collection.
+    match /players/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidPlayer(request.resource.data);
+      allow update: if isOwner(userId) && isValidPlayer(request.resource.data) && uidNotModified();
+      allow delete: if isOwner(userId);
+    }
+
+    // Everything else is denied by default.
+  }
+}

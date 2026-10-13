@@ -340,6 +340,52 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .credit-block.specs dd { margin: 0; font-size: 0.95rem; }
 .credits-end { margin: 0; font-family: var(--f-story); color: var(--muted); }
 
+/* ---------- 계정 (타이틀 화면) ---------- */
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px;
+  border: 2px solid var(--edge);
+  border-radius: var(--r);
+  background: var(--paper);
+  box-shadow: 0 3px 0 var(--drop);
+  text-align: left;
+}
+.account:empty { display: none; }
+.account .who { display: flex; flex: 1; flex-wrap: wrap; align-items: baseline; column-gap: 6px; min-width: 0; font-size: 0.95rem; line-height: 1.35; }
+.account .who b { font-family: var(--f-display); font-size: 1.05rem; font-weight: 400; }
+.account .who small { flex-basis: 100%; font-size: 0.78rem; color: var(--muted); }
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--edge);
+  border-radius: 50%;
+  background: var(--yolk);
+  color: var(--yolk-ink);
+  font-family: var(--f-display);
+}
+.admin-badge { padding: 0 8px; border-radius: 99px; background: var(--k-hidden); color: var(--paper); font-size: 0.72rem; }
+.admin-btn { border-color: var(--k-hidden); color: var(--k-hidden); box-shadow: 0 3px 0 var(--k-hidden); }
+.admin-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 8px; }
+.admin-row label { grid-column: 1 / -1; font-family: var(--f-display); }
+.admin-row select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-2);
+  color: var(--ink);
+  font: inherit;
+}
+.book-card.peek { border-style: dashed; border-color: var(--k-hidden); color: var(--ink); }
+
 /* ---------- 창, 알림 ---------- */
 .overlay {
   position: fixed;

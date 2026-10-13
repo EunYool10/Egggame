@@ -36,6 +36,31 @@ Node.js가 있다면 `npm start`로 http://localhost:3000 에서 띄울 수도 �
 
 프레임워크, 라이브러리, 빌드 도구 없이 만든 정적 웹앱입니다. 이미지와 음원 파일 없이 그림은 SVG로, 소리는 Web Audio로 코드에서 만듭니다.
 
+## 로그인과 계정 저장
+
+- Firebase 프로젝트 `egggame-eunyool`의 Authentication(Google)과 Firestore(`(default)`, 서울 리전 asia-northeast3)를 씁니다.
+- 계정마다 `players/{uid}` 문서 하나에 엔딩별 횟수, 다녀간 장면, 플레이 기록, 이어하기(JSON), 입은 스킨을 저장합니다. 이름이나 이메일은 저장하지 않습니다.
+- 처음 로그인하면 그 기기의 게스트 기록이 계정으로 옮겨집니다. 같은 계정의 기기끼리는 더 많이 진행한 쪽 기록으로 합쳐집니다.
+- 보안 규칙은 `firestore.rules`에 있습니다. 본인 문서만 읽고 쓸 수 있고, 모든 값의 형식과 크기를 검사합니다. 배포: `firebase deploy --only firestore:rules`
+- 엔딩, 장면, 스킨을 추가하면 `firestore.rules`의 `endingIds` · `sceneIds` · `skinIds` 목록도 함께 고쳐야 저장됩니다.
+- Firebase SDK는 로그인할 때(또는 전에 로그인했던 기기에서)만 내려받습니다.
+
+## 관리자
+
+관리자로 등록된 Google 계정으로 로그인하면 아래 권한이 생깁니다.
+
+- 계란 옷장의 모든 스킨 사용
+- 엔딩 도감에서 아직 못 본 엔딩까지 전부 열람
+- 관리자 메뉴 (타이틀 화면, 진행 중 ☰ 메뉴): 장면 바로 가기, 엔딩 바로 보기, 온기·금 조절, 아이템·친구 모두 받기, 미니게임 항상 성공
+
+관리자는 `js/meta.js`의 `admins`에 이메일의 해시로 등록합니다. 공개 저장소에 이메일이 그대로 드러나지 않게 하려는 것입니다. 해시는 아래 명령으로 만듭니다.
+
+```
+node -e "console.log(require('crypto').createHash('sha256').update('egggame:' + process.argv[1].toLowerCase()).digest('hex'))" 이메일주소
+```
+
+관리자 기능은 게임 화면 안에서만 동작하고, 다른 사람의 기록에는 접근할 수 없습니다.
+
 ## Render 배포
 
 main 브랜치에 푸시하면 Render가 자동으로 다시 배포합니다. 서비스는 아래 두 방식 중 하나로 만듭니다.
@@ -70,6 +95,8 @@ Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `
 
 ## 기능
 
+- Google 로그인: 기록(엔딩 도감, 플레이 기록, 이어하기, 입은 스킨)이 계정에 저장돼 다른 기기에서도 이어집니다. 로그인하지 않아도 게스트로 그대로 플레이할 수 있습니다.
+- 관리자 계정: 모든 스킨, 엔딩 도감 전체 열람, 관리자 메뉴 (아래 '관리자' 참고)
 - 자동 저장과 이어하기, 한 걸음 되돌리기, 지난 이야기 다시 보기
 - 엔딩 도감 (잠긴 엔딩 힌트, 플레이 기록, 최단 진엔딩 기록)
 - 계란 옷장: 엔딩을 볼수록 해금되는 스킨 15종 (껍질 색, 무늬, 모자)
@@ -88,7 +115,9 @@ Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `
 | `js/art.js` | 계란이·병아리·모자·장소 배경 그림 (SVG) |
 | `js/core.js` | 저장(설정, 이어하기, 도감), 효과음과 배경 음악, 진동 |
 | `js/ui.js` | 화면 전환, 창과 알림, 타이틀, 도감, 옷장, 설정, 크레딧 |
-| `js/game.js` | 진행 엔진 (선택 처리, 미니게임, 엔딩, 입력) |
+| `js/game.js` | 진행 엔진 (선택 처리, 미니게임, 엔딩, 관리자 메뉴, 입력) |
+| `js/account.js` | Google 로그인, 계정 기록 동기화, 관리자 확인 |
+| `firestore.rules`, `firebase.json`, `.firebaserc` | Firestore 보안 규칙과 Firebase 프로젝트 설정 |
 | `css/base.css`, `css/game.css` | 화면 디자인 (라이트/다크 테마) |
 | `render.yaml` | Render Static Site 배포 설정 (Blueprint) |
 | `server.mjs`, `package.json` | Render Web Service용 · 로컬 확인용 정적 파일 서버 |

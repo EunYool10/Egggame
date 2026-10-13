@@ -293,6 +293,12 @@
   let press = null;
 
   function minigame(game, done) {
+    if (window.App.admin && window.App.autoWin) {
+      UI.toast(`관리자: <b>${esc(game.title)}</b> 자동 성공`);
+      Sound.play('win');
+      done(true);
+      return;
+    }
     const level = DIFF[Store.settings.difficulty] ? Store.settings.difficulty : 'normal';
     const d = DIFF[level];
     const left = 0.12 + Math.random() * (0.76 - d.zone);
@@ -411,6 +417,7 @@
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
   function pauseMenu() {
     const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['settings', '설정'], ['restart', '처음부터 다시'], ['title', '타이틀로 (자동 저장됨)']];
+    if (window.App.admin) acts.splice(3, 0, ['admin', '관리자 메뉴']);
     const body = UI.modal({
       title: '잠깐 멈춤',
       body: `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn" data-act="${a}">${l}</button>`).join('')}</div>`,
@@ -425,6 +432,7 @@
       if (act === 'log') showLog();
       else if (act === 'bag') showBag();
       else if (act === 'settings') UI.show('settings');
+      else if (act === 'admin') adminMenu();
       else if (act === 'title') UI.show('title');
       else if (act === 'restart') {
         UI.confirmBox({ title: '처음부터 다시 할까요?', text: '지금 모험은 사라지고 냉장고에서 다시 시작해요.', ok: '다시 시작', run: newGame });
@@ -448,7 +456,61 @@
     UI.modal({ title: '지난 이야기', body: items ? `<ol class="log-list">${items}</ol>` : '<p class="bag-empty">아직 지나온 장면이 없어요.</p>' });
   }
 
+  // ---------- 관리자 메뉴 (관리자 계정에만 보인다) ----------
+  function adminMenu() {
+    if (!window.App.admin) return;
+    const inPlay = UI.current === 'play';
+    const sceneOpts = Object.entries(S.scenes).filter(([, sc]) => !sc.branch)
+      .map(([id, sc]) => `<option value="${id}">${sc.ch}장 · ${esc(sc.place)} (${id})</option>`).join('');
+    const endOpts = endIds.map((id, i) => `<option value="${id}">${pad(i + 1)} · ${esc(S.endings[id].title)}</option>`).join('');
+    const body = UI.modal({
+      title: '관리자 메뉴',
+      body: '<p class="hint">관리자 계정에만 보여요. 계란 옷장의 모든 스킨이 열려 있어요.</p>' +
+        `<div class="admin-row"><label for="admScene">장면 바로 가기</label><select id="admScene">${sceneOpts}</select>` +
+        '<button type="button" class="btn small" data-adm="scene">이동</button></div>' +
+        `<div class="admin-row"><label for="admEnding">엔딩 바로 보기</label><select id="admEnding">${endOpts}</select>` +
+        '<button type="button" class="btn small" data-adm="ending">보기</button></div>' +
+        (inPlay
+          ? '<div class="row"><button type="button" class="btn small" data-adm="warm">온기 +10℃</button>' +
+            '<button type="button" class="btn small" data-adm="cold">온기 -10℃</button>' +
+            '<button type="button" class="btn small" data-adm="heal">금 없애기</button>' +
+            '<button type="button" class="btn small" data-adm="all">아이템·친구 모두 받기</button></div>'
+          : '') +
+        `<label class="toggle" for="admAutoWin"><span>미니게임 항상 성공</span><input type="checkbox" id="admAutoWin"${window.App.autoWin ? ' checked' : ''}></label>`,
+    });
+    body.querySelector('#admAutoWin').addEventListener('change', (ev) => {
+      window.App.autoWin = ev.target.checked;
+      UI.toast(ev.target.checked ? '미니게임을 항상 성공해요.' : '미니게임을 원래대로 해요.');
+    });
+    body.addEventListener('click', (ev) => {
+      const b = ev.target.closest('[data-adm]');
+      if (!b) return;
+      const act = b.dataset.adm;
+      const target = body.querySelector(act === 'ending' ? '#admEnding' : '#admScene').value;
+      UI.closeModal();
+      Sound.play('pick');
+      if (act === 'scene' || act === 'ending') {
+        if (UI.current === 'play') st.hist.push(snapshot());
+        else { st = fresh(); shownBg = null; }
+        st.say = null;
+        st.notes = [];
+        go(target);
+        return;
+      }
+      if (act === 'warm') st.t = Math.min(40, st.t + 10);
+      if (act === 'cold') st.t = Math.max(0, st.t - 10);
+      if (act === 'heal') st.c = 0;
+      if (act === 'all') { st.bag = Object.keys(M.items); st.friends = Object.keys(M.friends); }
+      hud();
+      $('egg').innerHTML = Art.egg(skin(), { mood: S.scenes[st.node].mood, cracks: st.c });
+      save();
+      UI.toast('관리자: 상태를 바꿨어요.');
+    });
+  }
+  window.App.adminMenu = adminMenu;
+
   // ---------- 입력 ----------
+  $('btnAdmin').addEventListener('click', () => { Sound.play('tap'); adminMenu(); });
   $('btnNew').addEventListener('click', () => {
     if (!Store.loadRun()) { newGame(); return; }
     UI.confirmBox({ title: '새로 시작할까요?', text: '이어하던 모험이 있어요. 새로 시작하면 그 저장은 지워져요.', ok: '새로 시작', run: newGame });

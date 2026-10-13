@@ -111,7 +111,7 @@ window.UI = (() => {
   // ---------- 스킨 ----------
   function isUnlocked(skin) {
     const u = skin.unlock;
-    if (!u) return true;
+    if (!u || window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
     if (u.ending) return Boolean(Store.book.endings[u.ending]);
     if (u.count) return seenCount() >= u.count;
     return false;
@@ -140,6 +140,7 @@ window.UI = (() => {
     const run = Store.loadRun();
     const scene = run && S.scenes[run.node];
     $('btnContinue').hidden = !scene;
+    $('btnAdmin').hidden = !window.App.admin;
     if (scene) $('continueInfo').textContent = `${scene.ch}장 · ${scene.place} · 선택 ${run.steps}번째`;
     $('titleFoot').textContent = `${M.byline} · 엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
   }
@@ -163,6 +164,11 @@ window.UI = (() => {
       const e = S.endings[id];
       const rec = book.endings[id];
       const thumb = `<span class="thumb egg">${endingArt(e, skin, rec ? e.title : '아직 못 본 엔딩')}</span>`;
+      if (!rec && window.App.admin) {
+        return `<li class="book-card peek" data-kind="${e.kind}">${thumb}` +
+          `<span><span class="no">엔딩 ${pad(i + 1)} · 아직 안 봄</span><span class="nm">${esc(e.title)}</span></span>` +
+          `<span class="kd">${KIND[e.kind]} · 관리자 열람</span></li>`;
+      }
       if (!rec) {
         return `<li class="book-card">${thumb}<span><span class="no">엔딩 ${pad(i + 1)}</span><span class="nm">???</span></span>` +
           `<button type="button" class="hint-btn" data-hint="${id}">힌트 보기</button></li>`;
