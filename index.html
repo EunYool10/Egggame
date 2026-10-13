@@ -5,99 +5,209 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- @@PAGE-START@@ -->
 <title>계란이의 모험</title>
-<meta name="description" content="냉장고를 탈출한 계란이가 꼬꼬엄마 품을 찾아 떠나는 선택형 텍스트 어드벤처">
+<meta name="description" content="냉장고를 탈출한 계란이가 꼬꼬엄마 품을 찾아 떠나는 A·B·C 선택형 텍스트 어드벤처">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Jua&display=swap">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/game.css">
 </head>
 <body>
-<div class="app">
-  <header class="top">
-    <div class="brand">계란이의 <b>모험</b></div>
-    <div class="hud" id="hud" hidden>
-      <div class="meter" title="꼬꼬엄마에게 가기 전에 20℃ 넘게 데워 두면 좋아요">
-        <span class="lbl">온기</span>
-        <div class="bar"><i id="tempFill"></i><span class="tick"></span></div>
-        <span id="tempVal">4.0℃</span>
-      </div>
-      <div class="shell-state">
-        <span class="lbl">껍질</span>
-        <span id="cracks" role="img" aria-label="껍질의 금 0개, 최대 3개"></span>
-      </div>
+<div class="app" id="app">
+
+  <!-- 타이틀 -->
+  <section class="screen title-screen" id="title">
+    <div class="title-stage">
+      <div class="backdrop" id="titleBackdrop"></div>
+      <div class="egg hero-egg" id="titleEgg"></div>
     </div>
-  </header>
-
-  <main class="stack">
-    <!-- 타이틀 -->
-    <section class="screen" id="title">
-      <div class="hero">
-        <div class="egg big" id="titleEgg"></div>
-        <h1>계란이의 <em>모험</em></h1>
-        <p>할머니 댁 냉장고 맨 끝자리, 내일 아침 계란말이가 될 차례인 계란이. 들판 너머 꼬꼬엄마 품에 안겨 병아리가 될 수 있을까요? 상황을 읽고 A, B, C 중 하나를 고르세요. 고른 길에 따라 결말이 달라져요.</p>
+    <h1 class="logo">계란이의 <em>모험</em></h1>
+    <p class="tagline">냉장고 맨 끝자리에서 꼬꼬엄마 품까지. 고르는 길마다 결말이 달라져요.</p>
+    <nav class="menu" aria-label="메인 메뉴">
+      <button type="button" class="btn primary" id="btnContinue" hidden>
+        <span>이어하기</span><small id="continueInfo"></small>
+      </button>
+      <button type="button" class="btn primary" id="btnNew"><span>새로 시작</span></button>
+      <div class="menu-grid">
+        <button type="button" class="btn" id="btnBook">엔딩 도감</button>
+        <button type="button" class="btn" id="btnCloset">계란 옷장</button>
+        <button type="button" class="btn" id="btnSettings">설정</button>
+        <button type="button" class="btn" id="btnCredits">만든 사람들</button>
       </div>
-      <ul class="rules">
-        <li><b>온기</b>냉장고에서 막 나온 계란이는 4℃예요. 따뜻한 곳을 지나면 올라가요.</li>
-        <li><b>껍질</b>떨어지거나 부딪히면 금이 가요. 금이 3개면 와장창!</li>
-        <li><b>엔딩 13개</b>한 번 본 엔딩은 아래 도감에 모여요.</li>
-      </ul>
-      <div class="row center">
-        <button type="button" class="btn" id="startBtn">모험 시작</button>
-      </div>
-    </section>
+    </nav>
+    <p class="title-foot" id="titleFoot"></p>
+  </section>
 
-    <!-- 이야기 진행 -->
-    <section class="screen" id="play" hidden>
-      <div class="scene-head">
+  <!-- 이야기 진행 -->
+  <section class="screen play-screen" id="play" hidden>
+    <header class="hud">
+      <button type="button" class="icon-btn" id="btnPause" aria-label="메뉴 열기"><span aria-hidden="true">☰</span></button>
+      <div class="where">
         <span class="chap" id="chap">1장</span>
         <span class="place" id="place">냉장고 문 칸</span>
       </div>
-      <div class="egg" id="egg"></div>
-      <p class="say" id="say" hidden></p>
+      <button type="button" class="bag-btn" id="btnBag" aria-label="가방과 친구 보기">
+        가방 <b id="bagCount">0</b>
+      </button>
+      <div class="meters">
+        <div class="meter" title="둥지에 도착하기 전에 20℃ 넘게 데워 두면 좋아요">
+          <span class="lbl">온기</span>
+          <div class="bar"><i id="tempFill"></i><span class="tick"></span></div>
+          <span class="val" id="tempVal">4.0℃</span>
+        </div>
+        <div class="meter">
+          <span class="lbl">껍질</span>
+          <span class="cracks" id="cracks" role="img" aria-label="껍질의 금 0개, 최대 3개"></span>
+          <span class="shield" id="shield" hidden title="버터가 다음 충격을 막아 줘요">버터</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="stage" id="stage">
+      <div class="backdrop" id="backdrop"></div>
+      <div class="egg stage-egg" id="egg"></div>
+      <div class="floaters" id="floaters" aria-hidden="true"></div>
+    </div>
+
+    <p class="say" id="say" hidden></p>
+    <div class="dialog" id="dialog">
       <div class="narr" id="text" aria-live="polite"></div>
-      <div class="choices" id="choices"></div>
-      <div class="foot">
-        <span id="steps"></span>
-        <div class="row">
-          <button type="button" class="btn ghost" id="undo">한 걸음 되돌리기</button>
-          <button type="button" class="btn ghost" id="restart">처음으로</button>
-        </div>
-      </div>
-      <p class="hint">글을 누르면 바로 다 보여요. 키보드 A·B·C 또는 1·2·3으로도 고를 수 있어요.</p>
-    </section>
+      <span class="more" id="more" aria-hidden="true">▼</span>
+    </div>
+    <div class="choices" id="choices"></div>
 
-    <!-- 엔딩 -->
-    <section class="screen" id="end" hidden>
-      <div class="end-head">
-        <span class="kind" id="endKind">해피 엔딩</span>
-        <div class="row center">
-          <span class="end-no" id="endNo">엔딩 01 / 13</span>
-          <span class="new" id="endNew">새로 발견!</span>
-        </div>
-        <h2 id="endTitle"></h2>
+    <footer class="play-foot">
+      <div class="row">
+        <button type="button" class="btn small" id="btnUndo">한 걸음 되돌리기</button>
+        <button type="button" class="btn small" id="btnLog">지난 이야기</button>
       </div>
-      <div class="egg big" id="endEgg"></div>
-      <p class="say" id="endSay" hidden></p>
-      <div class="narr" id="endText"></div>
-      <dl class="stats" id="endStats"></dl>
+      <span class="saved" id="saved">자동 저장됨</span>
+    </footer>
+  </section>
+
+  <!-- 엔딩 -->
+  <section class="screen end-screen" id="end" hidden>
+    <div class="end-head">
+      <span class="kind" id="endKind"></span>
       <div class="row center">
-        <button type="button" class="btn" id="endRestart">처음부터 다시</button>
-        <button type="button" class="btn ghost" id="endUndo">마지막 선택 되돌리기</button>
+        <span class="end-no" id="endNo"></span>
+        <span class="new" id="endNew">새로 발견!</span>
       </div>
-    </section>
+      <h2 id="endTitle"></h2>
+    </div>
+    <div class="stage end-stage">
+      <div class="backdrop" id="endBackdrop"></div>
+      <div class="egg stage-egg" id="endArt"></div>
+    </div>
+    <p class="say" id="endSay" hidden></p>
+    <div class="narr story" id="endText"></div>
+    <div class="unlocks" id="endUnlocks" hidden></div>
+    <dl class="stats" id="endStats"></dl>
+    <details class="route">
+      <summary>지나온 길</summary>
+      <ol id="endRoute"></ol>
+    </details>
+    <div class="row center wrap-actions">
+      <button type="button" class="btn primary" id="btnRetry">처음부터 다시</button>
+      <button type="button" class="btn" id="btnEndUndo">마지막 선택 되돌리기</button>
+      <button type="button" class="btn" id="btnShare">결과 복사</button>
+      <button type="button" class="btn" id="btnEndCredits" hidden>크레딧 보기</button>
+      <button type="button" class="btn" id="btnEndBook">엔딩 도감</button>
+      <button type="button" class="btn" id="btnEndTitle">타이틀로</button>
+    </div>
+  </section>
 
-    <!-- 엔딩 도감 -->
-    <section class="screen" id="dex">
-      <div class="dex-head">
-        <h2>엔딩 도감</h2>
-        <span id="dexCount">0 / 13</span>
+  <!-- 엔딩 도감 -->
+  <section class="screen page" id="book" hidden>
+    <header class="page-head">
+      <button type="button" class="btn small back" data-back>← 뒤로</button>
+      <h2>엔딩 도감</h2>
+    </header>
+    <div class="progress">
+      <div class="progress-bar"><i id="bookFill"></i></div>
+      <span id="bookCount"></span>
+    </div>
+    <dl class="stats" id="bookStats"></dl>
+    <ul class="book-grid" id="bookGrid"></ul>
+  </section>
+
+  <!-- 계란 옷장 -->
+  <section class="screen page" id="closet" hidden>
+    <header class="page-head">
+      <button type="button" class="btn small back" data-back>← 뒤로</button>
+      <h2>계란 옷장</h2>
+    </header>
+    <div class="closet-top">
+      <div class="egg closet-egg" id="closetEgg"></div>
+      <div class="closet-info">
+        <h3 id="closetName"></h3>
+        <p id="closetDesc"></p>
+        <p class="hint" id="closetCount"></p>
       </div>
-      <ul class="dex-grid" id="dexGrid"></ul>
-    </section>
-  </main>
+    </div>
+    <ul class="skin-grid" id="skinGrid"></ul>
+  </section>
+
+  <!-- 설정 -->
+  <section class="screen page" id="settings" hidden>
+    <header class="page-head">
+      <button type="button" class="btn small back" data-back>← 뒤로</button>
+      <h2>설정</h2>
+    </header>
+    <form class="settings" id="settingsForm"></form>
+    <div class="danger-zone">
+      <div>
+        <h3>데이터 초기화</h3>
+        <p class="hint">엔딩 도감, 옷장, 기록, 이어하기 저장을 모두 지워요. 설정은 그대로 남아요.</p>
+      </div>
+      <button type="button" class="btn danger" id="btnReset">모두 지우기</button>
+    </div>
+  </section>
+
+  <!-- 크레딧 -->
+  <section class="screen credits-screen" id="credits" hidden>
+    <div class="credits-window" id="creditsWindow">
+      <div class="credits-roll" id="creditsRoll"></div>
+    </div>
+    <div class="row center">
+      <button type="button" class="btn" id="btnCreditsReplay">다시 보기</button>
+      <button type="button" class="btn primary" data-back>닫기</button>
+    </div>
+  </section>
+
+  <!-- 공용 창 (확인, 일시정지 메뉴, 가방, 지난 이야기) -->
+  <div class="overlay" id="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h2 id="modalTitle"></h2>
+      <div class="sheet-body" id="modalBody"></div>
+      <div class="row end-row" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- 미니게임 -->
+  <div class="overlay" id="minigame" hidden>
+    <div class="sheet game-sheet" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
+      <p class="eyebrow">미니게임 · <span id="gameLevel"></span></p>
+      <h2 id="gameTitle"></h2>
+      <p id="gameHint"></p>
+      <div class="track" id="gameTrack">
+        <div class="zone" id="gameZone"></div>
+        <div class="marker" id="gameMarker"></div>
+      </div>
+      <p class="game-result" id="gameResult" aria-live="assertive"></p>
+      <button type="button" class="btn primary big" id="gameGo">지금!</button>
+      <p class="hint">스페이스바나 엔터로도 누를 수 있어요.</p>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 </div>
-<script src="story.js"></script>
-<script src="game.js"></script>
+<script src="js/story.js"></script>
+<script src="js/meta.js"></script>
+<script src="js/art.js"></script>
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
 <!-- @@PAGE-END@@ -->
 </body>
 </html>
