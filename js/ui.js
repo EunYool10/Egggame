@@ -281,7 +281,11 @@ window.UI = (() => {
     const skin = currentSkin();
     $('creditsRoll').innerHTML =
       `<div class="egg">${Art.egg(skin, { mood: 'happy' })}</div><h2 class="credits-title">계란이의 모험</h2>` +
-      M.credits.map((c) => `<div class="credit-block"><h3>${esc(c.role)}</h3>${c.names.map((n) => `<p>${esc(n)}</p>`).join('')}</div>`).join('') +
+      M.credits.map((c) => `<div class="credit-block${c.specs ? ' specs' : ''}"><h3>${esc(c.role)}</h3>` +
+        (c.specs
+          ? `<dl>${c.specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`
+          : c.names.map((n) => `<p>${esc(n)}</p>`).join('')) +
+        '</div>').join('') +
       `<div class="egg">${Art.chick(skin, {})}</div>` +
       `<p class="credits-end">플레이해 주셔서 고마워요. 삐약!</p><p class="hint">${esc(M.copyright)}</p>`;
     $('creditsWindow').classList.toggle('still', reduceMotion());

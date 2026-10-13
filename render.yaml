@@ -1,0 +1,21 @@
+# Render 배포 설정 (Blueprint)
+# Render 대시보드 → New + → Blueprint → EunYool10/Egggame 선택 → Apply 를 누르면
+# 아래 정적 사이트가 만들어지고, 이후 main 브랜치에 푸시할 때마다 자동으로 다시 배포된다.
+# 정적 사이트는 무료 플랜에서도 잠들지 않아 첫 접속이 바로 열린다.
+services:
+  - type: web
+    runtime: static
+    name: egggame
+    branch: main
+    # 게임 파일만 dist/로 모아서 내보낸다 (README, 설정 파일 등은 공개하지 않음).
+    buildCommand: mkdir -p dist && cp -r index.html css js dist/
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    headers:
+      # 파일 이름에 버전이 없으니, 새로 배포하면 브라우저가 바로 새 파일을 받도록 매번 확인하게 한다.
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

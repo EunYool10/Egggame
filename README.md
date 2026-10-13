@@ -2,9 +2,50 @@
 
 할머니 댁 냉장고 맨 끝자리, 내일 아침 계란말이가 될 차례인 계란이가 들판 너머 꼬꼬엄마 품을 찾아 떠나는 선택형 텍스트 어드벤처입니다. 상황 설명을 읽고 A·B·C 중 하나를 고르면, 고른 길에 따라 15가지 엔딩 중 하나에 도착합니다.
 
+제작: 은율
+
 ## 실행
 
 빌드 과정이 없습니다. `index.html`을 브라우저로 열면 바로 플레이할 수 있습니다.
+Node.js가 있다면 `npm start`로 http://localhost:3000 에서 띄울 수도 있습니다.
+
+## 기술 스펙
+
+| 항목 | 내용 |
+| --- | --- |
+| 언어 | HTML5 · CSS3 · JavaScript (ES2020) |
+| 구조 | 프레임워크, 라이브러리, 빌드 도구 없이 직접 작성한 정적 웹앱 |
+| 엔진 | 데이터로 움직이는 분기형 스토리 엔진 (장면 15 · 엔딩 15 · 스킨 15) |
+| 그림 | 코드로 그린 인라인 SVG, 이미지 파일 0개 |
+| 소리 | Web Audio API 실시간 합성, 음원 파일 0개 |
+| 저장 | localStorage (설정 · 이어하기 · 엔딩 도감) |
+| 화면 | 반응형 레이아웃 (휴대폰~데스크톱), 라이트 · 다크 테마 |
+| 접근성 | 키보드 조작, 스크린 리더 안내, 움직임 줄이기 |
+| 코드 | JavaScript 약 1,800줄 · CSS 약 700줄 |
+| 배포 | GitHub → Render, main 브랜치 자동 배포 |
+
+## Render 배포
+
+main 브랜치에 푸시하면 Render가 자동으로 다시 배포합니다. 서비스는 아래 두 방식 중 하나로 만듭니다.
+
+**Static Site (추천)**: 무료 플랜에서도 잠들지 않아 바로 열립니다.
+Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `render.yaml` 설정이 그대로 적용됩니다.
+직접 만들 때는 New + → Static Site에서 아래처럼 입력합니다.
+
+| 설정 | 값 |
+| --- | --- |
+| Build Command | `mkdir -p dist && cp -r index.html css js dist/` |
+| Publish Directory | `dist` |
+
+**Web Service**: 무료 플랜은 15분 동안 접속이 없으면 잠들고, 깨어나는 데 50초쯤 걸립니다.
+
+| 설정 | 값 |
+| --- | --- |
+| Language | Node |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+
+`server.mjs`는 의존성 없는 정적 파일 서버로, 게임 파일(`index.html`, `css/`, `js/`)만 내보냅니다. 상태 확인 주소는 `/healthz`입니다.
 
 ## 게임 방법
 
@@ -37,6 +78,8 @@
 | `js/ui.js` | 화면 전환, 창과 알림, 타이틀, 도감, 옷장, 설정, 크레딧 |
 | `js/game.js` | 진행 엔진 (선택 처리, 미니게임, 엔딩, 입력) |
 | `css/base.css`, `css/game.css` | 화면 디자인 (라이트/다크 테마) |
+| `render.yaml` | Render Static Site 배포 설정 (Blueprint) |
+| `server.mjs`, `package.json` | Render Web Service용 · 로컬 확인용 정적 파일 서버 |
 
 ## 장면 추가하기
 

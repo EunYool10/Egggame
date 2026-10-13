@@ -1,6 +1,6 @@
 // 계란이의 모험 v2 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '2.0',
+  version: '2.1',
 
   // 가방에 들어가는 아이템
   items: {
@@ -39,11 +39,24 @@ window.META = {
     { id: 'dino', name: '공룡알', desc: '모든 엔딩을 본 전설의 알.', shell: '#bcd99c', pattern: 'dino', unlock: { count: 15 } },
   ],
 
+  // names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 보여 준다.
   credits: [
-    { role: '기획 · 감독', names: ['은율 (EunYool10)'] },
-    { role: '이야기 · 프로그래밍', names: ['은율', 'Claude (Anthropic)'] },
-    { role: '그림', names: ['코드로 한 획씩 그린 SVG 일러스트'] },
-    { role: '음악 · 효과음', names: ['Web Audio로 직접 합성한 소리'] },
+    { role: '제작', names: ['은율'] },
+    {
+      role: '기술 스펙',
+      specs: [
+        ['언어', 'HTML5 · CSS3 · JavaScript (ES2020)'],
+        ['구조', '프레임워크, 라이브러리, 빌드 도구 없이 직접 작성한 정적 웹앱'],
+        ['엔진', '데이터로 움직이는 분기형 스토리 엔진 (장면 15 · 엔딩 15 · 스킨 15)'],
+        ['그림', '코드로 그린 인라인 SVG, 이미지 파일 0개'],
+        ['소리', 'Web Audio API 실시간 합성, 음원 파일 0개'],
+        ['저장', 'localStorage (설정 · 이어하기 · 엔딩 도감)'],
+        ['화면', '반응형 레이아웃, 라이트 · 다크 테마'],
+        ['접근성', '키보드 조작, 스크린 리더 안내, 움직임 줄이기'],
+        ['코드', 'JavaScript 약 1,800줄 · CSS 약 700줄'],
+        ['배포', 'GitHub → Render, main 브랜치 자동 배포'],
+      ],
+    },
     { role: '글꼴', names: ['Jua · Gowun Batang · Gowun Dodum', 'Google Fonts, SIL Open Font License'] },
     {
       role: '출연',
@@ -51,5 +64,5 @@ window.META = {
     },
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
   ],
-  copyright: '© 2026 EunYool10 · 계란이의 모험 v2.0',
+  copyright: '© 2026 은율 · 계란이의 모험 v2.1',
 };
