@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
-const PUBLIC = new Set(['index.html', 'css', 'js']); // 게임 파일만 내보낸다
+const PUBLIC = new Set(['index.html', 'css', 'js', 'icons', 'img']); // 게임 파일만 내보낸다
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',

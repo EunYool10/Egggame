@@ -324,12 +324,13 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
   gap: 30px;
   padding: 24px 20px;
   text-align: center;
-  animation: roll 52s linear forwards;
+  animation: roll 45s linear forwards;
 }
 .credits-window.still { overflow: auto; }
 .credits-window.still .credits-roll { position: static; animation: none; }
 @keyframes roll { to { transform: translateY(calc(-100% - var(--win))); } }
 .credits-roll .egg { width: 84px; margin: 0 auto; }
+.credits-mascot { display: block; width: min(64%, 240px); height: auto; margin: 0 auto; }
 .credits-title { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 2.4rem; }
 .credit-block h3 { margin: 0; font-family: var(--f-ui); font-weight: 400; font-size: 0.8rem; letter-spacing: 0.14em; color: var(--muted); }
 .credit-block p { margin: 4px 0 0; font-family: var(--f-display); font-size: 1.25rem; }

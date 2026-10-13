@@ -71,7 +71,7 @@ Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `
 
 | 설정 | 값 |
 | --- | --- |
-| Build Command | `mkdir -p dist && cp -r index.html css js dist/` |
+| Build Command | `mkdir -p dist && cp -r index.html css js icons img dist/` |
 | Publish Directory | `dist` |
 
 **Web Service**: 무료 플랜은 15분 동안 접속이 없으면 잠들고, 깨어나는 데 50초쯤 걸립니다.
@@ -82,7 +82,7 @@ Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `
 | Build Command | `npm install` |
 | Start Command | `npm start` |
 
-`server.mjs`는 의존성 없는 정적 파일 서버로, 게임 파일(`index.html`, `css/`, `js/`)만 내보냅니다. 상태 확인 주소는 `/healthz`입니다.
+`server.mjs`는 의존성 없는 정적 파일 서버로, 게임 파일(`index.html`, `css/`, `js/`, `icons/`, `img/`)만 내보냅니다. 상태 확인 주소는 `/healthz`입니다.
 
 ## 게임 방법
 

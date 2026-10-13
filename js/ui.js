@@ -286,7 +286,7 @@ window.UI = (() => {
   function renderCredits() {
     const skin = currentSkin();
     $('creditsRoll').innerHTML =
-      `<div class="egg">${Art.egg(skin, { mood: 'happy' })}</div><h2 class="credits-title">계란이의 모험</h2>` +
+      '<img class="credits-mascot" src="img/mascot.png" width="480" height="277" alt="계란이의 모험 대표 캐릭터"><h2 class="credits-title">계란이의 모험</h2>' +
       M.credits.map((c) => `<div class="credit-block${c.specs ? ' specs' : ''}"><h3>${esc(c.role)}</h3>` +
         (c.names || []).map((n) => `<p>${esc(n)}</p>`).join('') +
         (c.specsTitle ? `<h4>${esc(c.specsTitle)}</h4>` : '') +
