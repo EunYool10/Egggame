@@ -1,6 +1,6 @@
 // 계란이의 모험 v2 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '2.2',
+  version: '2.3',
 
   // 가방에 들어가는 아이템
   items: {
@@ -39,12 +39,12 @@ window.META = {
     { id: 'dino', name: '공룡알', desc: '모든 엔딩을 본 전설의 알.', shell: '#bcd99c', pattern: 'dino', unlock: { count: 15 } },
   ],
 
-  maker: '은율', // 타이틀 화면 아래에 보이는 제작자
+  byline: '개발 은율 · 아이디어 지우', // 타이틀 화면 아래에 보이는 한 줄
 
   // 크레딧. names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 (specsTitle이 표 제목)
   credits: [
     {
-      role: '제작',
+      role: '개발',
       names: ['은율'],
       specsTitle: '개발에 사용된 기술',
       specs: [
@@ -60,6 +60,9 @@ window.META = {
         ['개발 도구', 'Visual Studio Code · Git · Claude Code'],
       ],
     },
+    { role: '전체 테스트', names: ['은율', '지우'] },
+    { role: '아이디어', names: ['지우'] },
+    { role: '공동투자', names: ['YDS', 'TDS', 'TDSHQ', 'TDSNT'] },
     { role: '글꼴', names: ['Jua · Gowun Batang · Gowun Dodum', 'Google Fonts, SIL Open Font License'] },
     {
       role: '출연',
@@ -67,5 +70,5 @@ window.META = {
     },
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
   ],
-  copyright: '© 2026 은율 · 계란이의 모험 v2.2',
+  copyright: '© 2026 계란이의 모험 · v2.3',
 };

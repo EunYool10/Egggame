@@ -141,7 +141,7 @@ window.UI = (() => {
     const scene = run && S.scenes[run.node];
     $('btnContinue').hidden = !scene;
     if (scene) $('continueInfo').textContent = `${scene.ch}장 · ${scene.place} · 선택 ${run.steps}번째`;
-    $('titleFoot').textContent = `제작 ${M.maker} · 엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
+    $('titleFoot').textContent = `${M.byline} · 엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
   }
 
   // ---------- 엔딩 도감 ----------

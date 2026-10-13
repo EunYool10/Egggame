@@ -324,7 +324,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
   gap: 30px;
   padding: 24px 20px;
   text-align: center;
-  animation: roll 42s linear forwards;
+  animation: roll 52s linear forwards;
 }
 .credits-window.still { overflow: auto; }
 .credits-window.still .credits-roll { position: static; animation: none; }

@@ -380,7 +380,6 @@
       `<div><dt>사귄 친구</dt><dd>${st.friends.length}명</dd></div>`;
     $('endRoute').innerHTML = st.log.map((l) => `<li><b>${esc(l.place)}</b> <span class="pick">${esc(l.pick)}</span></li>`).join('');
     $('btnEndUndo').disabled = !st.hist.length;
-    $('btnEndCredits').hidden = !(e.kind === 'true' || st.node === 'e_party');
 
     Sound.play(e.kind === 'bad' ? 'bad' : 'good');
     if (st.node === 'e_crash') Sound.buzz([120, 60, 200]);
