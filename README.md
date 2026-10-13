@@ -9,20 +9,25 @@
 빌드 과정이 없습니다. `index.html`을 브라우저로 열면 바로 플레이할 수 있습니다.
 Node.js가 있다면 `npm start`로 http://localhost:3000 에서 띄울 수도 있습니다.
 
-## 기술 스펙
+## 개발에 사용된 기술
 
-| 항목 | 내용 |
+제작: 은율
+
+| 분야 | 기술 |
 | --- | --- |
 | 언어 | HTML5 · CSS3 · JavaScript (ES2020) |
-| 구조 | 프레임워크, 라이브러리, 빌드 도구 없이 직접 작성한 정적 웹앱 |
-| 엔진 | 데이터로 움직이는 분기형 스토리 엔진 (장면 15 · 엔딩 15 · 스킨 15) |
-| 그림 | 코드로 그린 인라인 SVG, 이미지 파일 0개 |
-| 소리 | Web Audio API 실시간 합성, 음원 파일 0개 |
-| 저장 | localStorage (설정 · 이어하기 · 엔딩 도감) |
-| 화면 | 반응형 레이아웃 (휴대폰~데스크톱), 라이트 · 다크 테마 |
-| 접근성 | 키보드 조작, 스크린 리더 안내, 움직임 줄이기 |
-| 코드 | JavaScript 약 1,800줄 · CSS 약 700줄 |
-| 배포 | GitHub → Render, main 브랜치 자동 배포 |
+| 화면 | CSS Grid · Flexbox · CSS 변수로 만든 라이트 · 다크 테마 |
+| 그래픽 | SVG, 계란이와 배경을 코드로 직접 그림 |
+| 애니메이션 | CSS Animation · requestAnimationFrame (미니게임) |
+| 사운드 | Web Audio API, 효과음과 배경 음악 실시간 합성 |
+| 저장 | Web Storage API (localStorage) |
+| 웹 API | Clipboard API (결과 복사) · Vibration API (진동) |
+| 글꼴 | Google Fonts (Jua · Gowun Batang · Gowun Dodum, SIL Open Font License) |
+| 서버 | Node.js 내장 http 모듈, 외부 패키지 없음 |
+| 배포 | GitHub · Render |
+| 개발 도구 | Visual Studio Code · Git · Claude Code |
+
+프레임워크, 라이브러리, 빌드 도구 없이 만든 정적 웹앱입니다. 이미지와 음원 파일 없이 그림은 SVG로, 소리는 Web Audio로 코드에서 만듭니다.
 
 ## Render 배포
 

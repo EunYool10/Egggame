@@ -141,7 +141,7 @@ window.UI = (() => {
     const scene = run && S.scenes[run.node];
     $('btnContinue').hidden = !scene;
     if (scene) $('continueInfo').textContent = `${scene.ch}장 · ${scene.place} · 선택 ${run.steps}번째`;
-    $('titleFoot').textContent = `엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
+    $('titleFoot').textContent = `제작 ${M.maker} · 엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
   }
 
   // ---------- 엔딩 도감 ----------
@@ -282,9 +282,9 @@ window.UI = (() => {
     $('creditsRoll').innerHTML =
       `<div class="egg">${Art.egg(skin, { mood: 'happy' })}</div><h2 class="credits-title">계란이의 모험</h2>` +
       M.credits.map((c) => `<div class="credit-block${c.specs ? ' specs' : ''}"><h3>${esc(c.role)}</h3>` +
-        (c.specs
-          ? `<dl>${c.specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`
-          : c.names.map((n) => `<p>${esc(n)}</p>`).join('')) +
+        (c.names || []).map((n) => `<p>${esc(n)}</p>`).join('') +
+        (c.specsTitle ? `<h4>${esc(c.specsTitle)}</h4>` : '') +
+        (c.specs ? `<dl>${c.specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : '') +
         '</div>').join('') +
       `<div class="egg">${Art.chick(skin, {})}</div>` +
       `<p class="credits-end">플레이해 주셔서 고마워요. 삐약!</p><p class="hint">${esc(M.copyright)}</p>`;

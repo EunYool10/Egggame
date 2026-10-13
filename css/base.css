@@ -60,6 +60,8 @@ body {
   color: var(--ink);
   font-family: var(--f-ui);
   line-height: 1.6;
+  word-break: keep-all; /* 한국어를 낱말 단위로 줄바꿈 */
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }
 [hidden] { display: none !important; }
@@ -331,8 +333,9 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .credits-title { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 2.4rem; }
 .credit-block h3 { margin: 0; font-family: var(--f-ui); font-weight: 400; font-size: 0.8rem; letter-spacing: 0.14em; color: var(--muted); }
 .credit-block p { margin: 4px 0 0; font-family: var(--f-display); font-size: 1.25rem; }
+.credit-block h4 { margin: 18px 0 0; font-family: var(--f-ui); font-weight: 400; font-size: 0.8rem; letter-spacing: 0.14em; color: var(--muted); }
 .credit-block.specs dl { display: grid; gap: 8px; max-width: 28em; margin: 10px auto 0; text-align: left; }
-.credit-block.specs dl div { display: grid; grid-template-columns: 4.5em minmax(0, 1fr); gap: 12px; }
+.credit-block.specs dl div { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 12px; }
 .credit-block.specs dt { font-size: 0.85rem; color: var(--muted); }
 .credit-block.specs dd { margin: 0; font-size: 0.95rem; }
 .credits-end { margin: 0; font-family: var(--f-story); color: var(--muted); }
