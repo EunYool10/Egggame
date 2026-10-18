@@ -358,6 +358,13 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .closet-info { min-width: 0; }
 .closet-info h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; }
 .closet-info p { margin: 4px 0 0; }
+.skin-groups { display: grid; gap: 18px; }
+.skin-group { display: grid; gap: 10px; }
+.skin-group h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; }
+.skin-group h3::before { content: ''; width: 12px; height: 12px; border: 2px solid var(--edge); border-radius: 50%; background: var(--era, var(--yolk)); }
+.skin-group[data-era="base"] h3::before { background: var(--paper); }
+.skin-group[data-era="reward"] h3::before { background: var(--k-true); }
+.skin-group h3 small { font-family: var(--f-ui); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
 .skin-grid li { display: flex; }
 .skin {

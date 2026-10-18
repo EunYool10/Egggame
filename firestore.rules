@@ -78,8 +78,11 @@ service cloud.firestore {
 
     function skinIds() {
       return ['white', 'brown', 'quail', 'blue', 'easter', 'jangjorim', 'baked', 'tteok', 'bandage', 'helmet',
-        'crown', 'beret', 'party', 'stamp', 'vlog', 'crispy', 'gold', 'jade', 'gaya', 'clay', 'pearl', 'mars',
-        'moon', 'alien', 'robot', 'dino', 'rainbow'];
+        'crown', 'beret', 'party', 'stamp', 'vlog', 'crispy', 'twin', 'icy', 'glasses', 'mud', 'bow', 'leafy',
+        'sale', 'rolled', 'sunny', 'gold', 'jade', 'gaya', 'clay', 'pearl', 'flowercrown', 'warrior', 'azalea',
+        'tiger', 'crackle', 'silk', 'sea', 'grill', 'pottery', 'fox', 'mars', 'moon', 'alien', 'robot',
+        'astro', 'saturn', 'lettuce', 'omelet', 'stardust', 'spaceparty', 'sleepy', 'fusion', 'recycle',
+        'dino', 'kkokko', 'cloud', 'holo', 'phoenix', 'riddle', 'silver', 'gem', 'rainbow'];
     }
 
     // Only the ending ids are checked. Checking all 48 counts one by one passes the

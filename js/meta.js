@@ -1,6 +1,6 @@
 // 계란이의 모험 v3 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '3.1',
+  version: '3.2',
 
   // 가방에 들어가는 아이템. shield: 금이 갈 충격을 한 번 막는다 (short는 상단 표시, block은 막았을 때 문장)
   items: {
@@ -47,6 +47,7 @@ window.META = {
 
   // 계란 옷장: shell 껍질 색, pattern 무늬, hat 모자, unlock 해금 조건
   // unlock: null(처음부터) · { ending: 엔딩 id } · { count: 발견한 엔딩 수 또는 'all' }
+  //         { story: 이야기 id } (그 이야기 엔딩 모두) · { kind: 엔딩 종류, n: 개수 } (예: 배드 엔딩 10개)
   skins: [
     { id: 'white', name: '기본 계란', desc: '냉장고 출신의 평범한 흰 계란.', shell: '#fff6e6', unlock: null },
     { id: 'brown', name: '토종란', desc: '갈색 껍질이 단단해 보이는 시골 계란.', shell: '#e3b484', unlock: null },
@@ -64,16 +65,51 @@ window.META = {
     { id: 'stamp', name: '1등급 계란', desc: '빨간 1등급 도장이 쾅!', shell: '#fff6e6', pattern: 'stamp', unlock: { ending: 'e_factory' } },
     { id: 'vlog', name: '브이로거', desc: '거꾸로 쓴 모자가 트레이드마크.', shell: '#fff6e6', hat: 'cap', unlock: { ending: 'e_vlog' } },
     { id: 'crispy', name: '바삭 치킨', desc: '황금빛 튀김옷을 입었어요. 겉은 바삭, 속은 촉촉.', shell: '#e3a04c', pattern: 'crispy', unlock: { ending: 'e_chicken' } },
+    { id: 'twin', name: '쌍란', desc: '노른자가 둘! 흰둥이를 꼭 닮았어요.', shell: '#fffaf0', pattern: 'twin', unlock: { ending: 'e_twins' } },
+    { id: 'icy', name: '꽁꽁 계란', desc: '얼음장처럼 차가웠던 늦둥이의 서리 낀 껍질.', shell: '#dcefff', pattern: 'frost', unlock: { ending: 'e_late' } },
+    { id: 'glasses', name: '과학실 안경', desc: '관찰 일지를 쓰던 도윤이네 반의 동그란 안경.', shell: '#fff6e6', hat: 'glasses', unlock: { ending: 'e_school' } },
+    { id: 'mud', name: '흙 묻은 보물', desc: '백구가 소중히 묻어 두었던 흔적이 남았어요.', shell: '#efd9b8', pattern: 'mud', unlock: { ending: 'e_treasure' } },
+    { id: 'bow', name: '복덩이 리본', desc: '할아버지가 달아 준 빨간 복 리본.', shell: '#fff6e6', hat: 'bow', unlock: { ending: 'e_lucky' } },
+    { id: 'leafy', name: '숲속 나뭇잎', desc: '깊은 숲에서 묻어 온 나뭇잎 무늬.', shell: '#e6f0d8', pattern: 'leaf', unlock: { ending: 'e_forest' } },
+    { id: 'sale', name: '특가 계란', desc: '마트 진열대에서 다시 만난 특가 스티커.', shell: '#fff6e6', pattern: 'sticker', unlock: { ending: 'e_again' } },
+    { id: 'rolled', name: '돌돌 계란말이', desc: '할머니표 계란말이처럼 돌돌 감긴 무늬.', shell: '#ffd84d', pattern: 'rolled', unlock: { ending: 'e_omelet' } },
+    { id: 'sunny', name: '지붕 위 프라이', desc: '햇볕에 노릇노릇, 노른자가 비쳐 보여요.', shell: '#fffdf6', pattern: 'yolk', unlock: { ending: 'e_sunfry' } },
     { id: 'gold', name: '황금알', desc: '현대 이야기의 진엔딩을 본 계란에게 주어지는 반짝이는 껍질.', shell: '#ffd34d', pattern: 'shine', unlock: { ending: 'e_hatch' } },
     { id: 'jade', name: '비취알', desc: '닭의 숲에서 깨어난 계란의 푸른 껍질.', shell: '#9fd3b5', pattern: 'shine', unlock: { ending: 'e_g_hatch' } },
     { id: 'gaya', name: '금관', desc: '일곱째 가야의 왕이 쓰던 작은 금관.', shell: '#fff6e6', hat: 'goldcrown', unlock: { ending: 'e_g_king' } },
     { id: 'clay', name: '가야 토기 알', desc: '물결무늬가 새겨진 이천 년 된 알.', shell: '#b8a593', pattern: 'wave', unlock: { ending: 'e_g_museum' } },
     { id: 'pearl', name: '여의주', desc: '용이 아끼는 무지갯빛 구슬.', shell: '#eef4ff', pattern: 'pearl', unlock: { ending: 'e_g_dragon' } },
+    { id: 'flowercrown', name: '꽃 화관', desc: '달빛 잔치에서 친구들이 엮어 준 화관.', shell: '#fff6e6', hat: 'flower', unlock: { ending: 'e_g_party' } },
+    { id: 'warrior', name: '투구 장군', desc: '뾰족한 껍질 투구를 쓴 숲속의 장군.', shell: '#fff6e6', hat: 'spike', unlock: { ending: 'e_g_crack' } },
+    { id: 'azalea', name: '진달래 알', desc: '봄과 함께 깨어난 날 핀 진달래꽃.', shell: '#fdeef4', pattern: 'blossom', unlock: { ending: 'e_g_late' } },
+    { id: 'tiger', name: '호랑이 무늬', desc: '어흥! 호랑이 굴에서 묻어 온 줄무늬.', shell: '#f0a24a', pattern: 'tiger', unlock: { ending: 'e_g_tiger' } },
+    { id: 'crackle', name: '잔금 토기', desc: '가야 토기에 새겨진 계란 껍질 잔금.', shell: '#e8dcc8', pattern: 'crackle', unlock: { ending: 'e_g_crash' } },
+    { id: 'silk', name: '비단 포대기', desc: '알지와 함께 덮었던 보드라운 비단.', shell: '#f7e3ef', pattern: 'silk', unlock: { ending: 'e_g_alji' } },
+    { id: 'sea', name: '남쪽 바다', desc: '아유타국으로 가는 붉은 돛배와 파도.', shell: '#e3f3fb', pattern: 'sea', unlock: { ending: 'e_g_ayuta' } },
+    { id: 'grill', name: '모닥불 구이', desc: '구지봉 잔치의 석쇠 자국이 남았어요.', shell: '#d9a066', pattern: 'grill', unlock: { ending: 'e_g_song' } },
+    { id: 'pottery', name: '단단한 토기 알', desc: '천 도 불길에 구워진 빗살무늬 껍질.', shell: '#a8a097', pattern: 'hatch', unlock: { ending: 'e_g_baked' } },
+    { id: 'fox', name: '붉은 여우', desc: '여우 꼬리처럼 붉고 보드라운 털빛.', shell: '#e98a4a', pattern: 'fur', unlock: { ending: 'e_g_fox' } },
     { id: 'mars', name: '화성 흙 알', desc: '붉은 모래가 묻은 화성 태생 껍질.', shell: '#e08a5f', pattern: 'spots', unlock: { ending: 'e_f_hatch' } },
     { id: 'moon', name: '계란별', desc: '지구를 도는 작은 달. 분화구가 송송.', shell: '#dcdde2', pattern: 'crater', unlock: { ending: 'e_f_moon' } },
     { id: 'alien', name: '타원별 대사', desc: '외계 행성에서 받은 은하수 무늬.', shell: '#cdbdf5', pattern: 'galaxy', unlock: { ending: 'e_f_alien' } },
     { id: 'robot', name: 'E-99', desc: '안테나를 단 화성 탐사 계란.', shell: '#dfe6ea', hat: 'antenna', unlock: { ending: 'e_f_robot' } },
+    { id: 'astro', name: '우주 헬멧', desc: '화성 기지 마스코트의 껍질 헬멧.', shell: '#fff6e6', hat: 'astro', unlock: { ending: 'e_f_helmet' } },
+    { id: 'saturn', name: '토성 고리', desc: '태양계에서 가장 긴 미끄럼틀을 두른 계란.', shell: '#f3dca8', hat: 'ring', unlock: { ending: 'e_f_saturn' } },
+    { id: 'lettuce', name: '상추 모자', desc: '수경 온실에서 갓 딴 상추 한 장.', shell: '#fff6e6', hat: 'lettuce', unlock: { ending: 'e_f_salad' } },
+    { id: 'omelet', name: '무중력 오믈렛', desc: '공처럼 동그란 오믈렛 빛깔. 허브가 송송.', shell: '#ffd84d', pattern: 'herbs', unlock: { ending: 'e_f_omelet' } },
+    { id: 'stardust', name: '별가루 계란', desc: '우주에 흩어졌던 껍질이 별가루가 되었어요.', shell: '#c9d6ff', pattern: 'stardust', unlock: { ending: 'e_f_crash' } },
+    { id: 'spaceparty', name: '태양계 파티', desc: '화성 기지 생일 파티의 색종이 조각.', shell: '#ece8ff', pattern: 'confetti', unlock: { ending: 'e_f_party' } },
+    { id: 'sleepy', name: '쿨쿨 우주잠', desc: '냉동 수면에서 막 깨어난 졸린 껍질.', shell: '#d6e4f7', pattern: 'zzz', unlock: { ending: 'e_f_late' } },
+    { id: 'fusion', name: '핵융합 반숙', desc: '0.3초 만에 익은 따끈한 빛이 번져요.', shell: '#ffe3b8', pattern: 'glow', unlock: { ending: 'e_f_engine' } },
+    { id: 'recycle', name: '분리수거 계란', desc: '화성 온실의 거름이 되어 딸기를 키웠어요.', shell: '#d6efd2', pattern: 'recycle', unlock: { ending: 'e_f_trash' } },
     { id: 'dino', name: '공룡알', desc: '엔딩 15개를 본 전설의 알.', shell: '#bcd99c', pattern: 'dino', unlock: { count: 15 } },
+    { id: 'kkokko', name: '꼬꼬 볏', desc: '현대 이야기의 엔딩을 모두 모은 계란에게.', shell: '#fff6e6', hat: 'comb', unlock: { story: 'modern' } },
+    { id: 'cloud', name: '구름무늬 알', desc: '고대 이야기의 엔딩을 모두 모은 계란에게.', shell: '#a9d6c6', pattern: 'cloud', unlock: { story: 'ancient' } },
+    { id: 'holo', name: '홀로그램 알', desc: '미래 이야기의 엔딩을 모두 모은 계란에게.', shell: '#eef6ff', pattern: 'holo', unlock: { story: 'future' } },
+    { id: 'phoenix', name: '불사조 알', desc: '배드 엔딩 10개를 견뎌 낸 불굴의 껍질.', shell: '#ff9a5a', pattern: 'flame', unlock: { kind: 'bad', n: 10 } },
+    { id: 'riddle', name: '수수께끼 알', desc: '히든 엔딩 5개를 찾아낸 탐정 계란.', shell: '#b9a8f0', pattern: 'question', unlock: { kind: 'hidden', n: 5 } },
+    { id: 'silver', name: '은빛 알', desc: '엔딩 25개를 본 계란의 은빛 껍질.', shell: '#d8dde3', pattern: 'shine', unlock: { count: 25 } },
+    { id: 'gem', name: '보석 알', desc: '엔딩 35개를 본 계란이 반짝반짝 깎은 보석 껍질.', shell: '#b5e3f5', pattern: 'gem', unlock: { count: 35 } },
     { id: 'rainbow', name: '무지개 알', desc: '세 시대의 엔딩을 모두 본 계란에게만.', shell: '#fff6e6', pattern: 'rainbow', unlock: { count: 'all' } },
   ],
 
@@ -111,5 +147,5 @@ window.META = {
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
     { role: '특별히 고마운 분', names: ['이번 작품을 준비한 은율입니다. 플레이 해주셔서 감사합니다.'] },
   ],
-  copyright: '© 2026 계란이의 모험 · v3.1',
+  copyright: '© 2026 계란이의 모험 · v3.2',
 };

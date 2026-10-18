@@ -29,6 +29,8 @@ window.Art = (() => {
 
   const dots = (list, color, op) =>
     list.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" opacity="${op}"/>`).join('');
+  const flake = (x, y, r, color) =>
+    `<path d="M${x - r} ${y} H${x + r} M${x - r / 2} ${y - r * 0.87} L${x + r / 2} ${y + r * 0.87} M${x + r / 2} ${y - r * 0.87} L${x - r / 2} ${y + r * 0.87}" stroke="${color}" stroke-width="2.4" stroke-linecap="round"/>`;
   const spark = (x, y, r, color, op = 1) =>
     `<path d="M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3} Z" fill="${color}" opacity="${op}"/>`;
 
@@ -72,6 +74,90 @@ window.Art = (() => {
     // 튀김옷: 울퉁불퉁한 바삭 무늬
     crispy: () => dots([[24, 40, 5], [46, 26, 4], [70, 34, 5], [92, 52, 4.5], [30, 66, 4], [56, 58, 5], [84, 78, 5], [18, 92, 4.5], [44, 88, 4], [66, 104, 5], [96, 104, 4], [32, 118, 4.5], [58, 126, 4], [84, 124, 4.5]], '#b8691c', 0.5) +
       dots([[34, 46, 3], [60, 40, 2.5], [80, 64, 3], [22, 80, 2.5], [50, 74, 3], [74, 92, 2.5], [40, 104, 3], [92, 90, 2.5], [68, 118, 2.5]], '#f6c66a', 0.9),
+    // ── v3.2 스킨 무늬 ──
+    // 쌍란: 비쳐 보이는 노른자 둘
+    twin: () => '<circle cx="40" cy="58" r="17" fill="#ffd84d" opacity=".4"/><circle cx="80" cy="62" r="17" fill="#ffd84d" opacity=".4"/>',
+    // 꽁꽁: 눈송이와 서리
+    frost: () => [[30, 40, 7], [86, 34, 6], [98, 92, 7], [22, 106, 6], [64, 124, 5]].map(([x, y, r]) => flake(x, y, r, '#ffffff')).join('') +
+      '<path d="M-4 120 q10 -8 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V144 H-4 Z" fill="#ffffff" opacity=".6"/>',
+    // 흙 묻은 보물
+    // (껍질을 띠로 나누지 않게, 군데군데 튄 흙 얼룩으로 그린다)
+    mud: () => [[24, 46, 9], [92, 40, 7], [100, 98, 10], [20, 108, 8], [62, 126, 9]].map(([x, y, r], i) =>
+      `<path d="M${x - r} ${y} C${x - r} ${y - r} ${x + r * 0.4} ${y - r * 1.1} ${x + r} ${y - r * 0.2} C${x + r * 1.2} ${y + r * 0.6} ${x + r * 0.2} ${y + r} ${x - r * 0.4} ${y + r * 0.8} C${x - r * 0.9} ${y + r * 0.6} ${x - r} ${y + r * 0.3} ${x - r} ${y} Z" fill="#8a5a36" opacity=".5" transform="rotate(${i * 50} ${x} ${y})"/>`).join('') +
+      dots([[38, 30, 2.5], [78, 60, 2], [40, 92, 2.2], [86, 122, 2.5], [108, 70, 2]], '#8a5a36', 0.5),
+    // 숲속 나뭇잎
+    leaf: () => [[30, 42, -30, '#6aa84f'], [88, 36, 25, '#8cc765'], [96, 100, -15, '#6aa84f'], [24, 108, 35, '#e2952f'], [62, 128, 0, '#8cc765']]
+      .map(([x, y, r, c]) => `<g transform="rotate(${r} ${x} ${y})"><path d="M${x - 11} ${y} Q${x} ${y - 11} ${x + 11} ${y} Q${x} ${y + 11} ${x - 11} ${y} Z" fill="${c}" opacity=".85"/>` +
+        `<path d="M${x - 9} ${y} H${x + 9}" stroke="#3f6b2c" stroke-width="1.4" opacity=".7"/></g>`).join(''),
+    // 마트 특가 스티커
+    sticker: () => '<g transform="rotate(12 84 40)"><rect x="64" y="28" width="40" height="24" rx="5" fill="#ffd34d" stroke="#d8402c" stroke-width="2"/>' +
+      '<text x="84" y="45" text-anchor="middle" font-size="12" font-weight="700" font-family="sans-serif" fill="#d8402c">특가</text></g>',
+    // 진달래
+    blossom: () => [[30, 40], [86, 36], [96, 98], [24, 104], [60, 126]].map(([x, y]) =>
+      [0, 72, 144, 216, 288].map((a) => `<circle cx="${x + 6 * Math.cos((a * Math.PI) / 180)}" cy="${y + 6 * Math.sin((a * Math.PI) / 180)}" r="4.6" fill="#f06bab" opacity=".8"/>`).join('') +
+      `<circle cx="${x}" cy="${y}" r="2.6" fill="#ffe27a"/>`).join(''),
+    // 호랑이 줄무늬
+    tiger: () => '<path d="M6 40 q14 6 26 -2 M4 70 q16 9 30 0 M6 102 q14 9 26 2 M114 44 q-14 6 -26 -2 M116 74 q-16 9 -30 0 M114 106 q-14 9 -26 2 M48 10 q12 12 24 0" stroke="#3b2f2a" stroke-width="5" fill="none" stroke-linecap="round"/>' +
+      '<ellipse cx="60" cy="118" rx="24" ry="14" fill="#fff6e6" opacity=".8"/>',
+    // 토기 잔금
+    crackle: () => '<path d="M10 40 L28 52 L22 70 L40 84 M28 52 L48 44 L60 60 L80 50 L96 62 M60 60 L58 80 M80 50 L86 30 M96 62 L110 76 M22 70 L12 92 L30 108 L52 112 L66 130 M52 112 L74 106 L92 118 M74 106 L84 90 L104 96" stroke="#6b5f52" stroke-width="1.4" fill="none" opacity=".55"/>',
+    // 오믈렛 허브
+    herbs: () => [[30, 44], [84, 36], [96, 96], [26, 104], [62, 126], [60, 30], [104, 70]].map(([x, y], i) =>
+      `<rect x="${x}" y="${y}" width="${i % 2 ? 6 : 8}" height="3.5" rx="1.6" fill="${i % 3 ? '#4f9a5a' : '#e05a47'}" transform="rotate(${i * 40} ${x} ${y})"/>`).join(''),
+    // 별가루
+    stardust: () => [[26, 40, 5], [80, 30, 4], [98, 70, 5], [20, 92, 4], [52, 122, 5], [92, 116, 4], [62, 52, 3]].map(([x, y, r], i) => spark(x, y, r, i % 2 ? '#ffe27a' : '#ffffff', 0.95)).join('') +
+      dots([[40, 64, 1.5], [70, 110, 1.5], [104, 96, 1.2], [30, 124, 1.2], [88, 50, 1.3]], '#ffffff', 0.9),
+    // 구름무늬 (전통 문양)
+    cloud: () => [[34, 40, 1], [86, 52, -1], [40, 116, -1], [88, 118, 1]].map(([x, y, d]) =>
+      `<path d="M${x - 16 * d} ${y} c0 -9 ${10 * d} -12 ${15 * d} -6 c3 -8 ${16 * d} -6 ${15 * d} 3 c7 0 7 9 0 9 h${-26 * d}" fill="none" stroke="#2f6b5a" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>` +
+      `<path d="M${x - 16 * d} ${y} c-6 0 -6 ${8} ${2 * d} 8" fill="none" stroke="#2f6b5a" stroke-width="2.4" stroke-linecap="round" opacity=".7"/>`).join(''),
+    // 홀로그램: 비스듬한 무지개 띠
+    holo: () => ['#ff9bd2', '#9be7ff', '#fff29b', '#c8a8ff', '#9bffc8'].map((c, i) =>
+      `<rect x="-40" y="${i * 34 - 20}" width="200" height="22" fill="${c}" opacity=".45" transform="rotate(-28 60 70)"/>`).join(''),
+    // 불사조: 아래에서 솟는 불꽃
+    flame: () => '<path d="M-2 140 C2 118 14 108 12 88 C24 102 28 112 26 122 C30 104 40 94 38 76 C54 94 58 116 52 140 Z" fill="#ffd34d" opacity=".85"/>' +
+      '<path d="M122 140 C118 118 106 108 108 88 C96 102 92 112 94 122 C90 104 80 94 82 76 C66 94 62 116 68 140 Z" fill="#ffd34d" opacity=".85"/>' +
+      '<path d="M44 140 C44 126 52 118 52 106 C62 118 64 128 62 140 Z" fill="#fff4c4" opacity=".9"/>',
+    // 수수께끼: 물음표들
+    question: () => [[30, 46, 20, -12], [88, 40, 18, 14], [96, 104, 22, 8], [24, 112, 16, -8]].map(([x, y, s, r]) =>
+      `<text x="${x}" y="${y}" text-anchor="middle" font-size="${s}" font-weight="700" font-family="sans-serif" fill="#ffffff" opacity=".85" transform="rotate(${r} ${x} ${y})">?</text>`).join(''),
+    // 계란말이: 돌돌 감긴 결
+    rolled: () => [0, 1, 2, 3].map((i) => `<path d="M6 ${40 + i * 26} q54 -16 108 0" stroke="#e8a91f" stroke-width="3" fill="none" opacity=".75"/>`).join('') +
+      '<path d="M92 58 m-3 0 a3 3 0 1 1 6 0 a7 7 0 1 1 -14 0 a11 11 0 1 1 22 0" stroke="#e8a91f" stroke-width="2.6" fill="none" opacity=".85"/>',
+    // 프라이: 비쳐 보이는 노른자
+    yolk: () => '<circle cx="60" cy="90" r="30" fill="#ffc233" opacity=".9"/><ellipse cx="49" cy="77" rx="8" ry="5" fill="#fff" opacity=".55"/>',
+    // 비단: 비스듬한 파스텔 줄
+    silk: () => ['#f5b8d4', '#c9b8f0', '#f5b8d4', '#c9b8f0', '#f5b8d4'].map((c, i) =>
+      `<rect x="-40" y="${i * 32 - 16}" width="200" height="12" fill="${c}" opacity=".55" transform="rotate(35 60 70)"/>`).join(''),
+    // 남쪽 바다: 아래쪽 파도
+    sea: () => '<path d="M-4 104 q10 -8 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V144 H-4 Z" fill="#4f9fd0" opacity=".6"/>' +
+      '<path d="M-4 120 q10 -8 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V144 H-4 Z" fill="#2f6f9a" opacity=".55"/>' +
+      '<path d="M84 30 L84 52 L70 52 Z" fill="#d9442f" opacity=".75"/>',
+    // 모닥불 구이: 석쇠 자국
+    grill: () => [0, 1, 2, 3, 4].map((i) => `<rect x="${-6 + i * 28}" y="-20" width="7" height="190" fill="#5c3720" opacity=".42" transform="rotate(35 60 70)"/>`).join(''),
+    // 빗살무늬
+    hatch: () => [26, 46, 112, 128].map((y) => Array.from({ length: 14 }, (_, i) => `M${4 + i * 9} ${y} l6 8`).join(' '))
+      .map((d) => `<path d="${d}" stroke="#5e554d" stroke-width="2" opacity=".55" fill="none"/>`).join(''),
+    // 여우 털빛: 하얀 가슴털과 털결
+    fur: () => '<ellipse cx="60" cy="124" rx="24" ry="15" fill="#fff6e6" opacity=".9"/>' +
+      '<path d="M20 46 l7 5 M30 34 l7 5 M90 36 l-7 5 M100 50 l-7 5 M16 76 l7 4 M104 80 l-7 4" stroke="#b8561f" stroke-width="2.6" stroke-linecap="round" opacity=".7"/>',
+    // 색종이 조각
+    confetti: () => [[24, 38, '#e76f9a'], [50, 22, '#6fa8e0'], [84, 30, '#ffd34d'], [100, 64, '#9be08a'], [18, 76, '#ffd34d'], [96, 104, '#e76f9a'], [30, 112, '#6fa8e0'], [64, 128, '#9be08a'], [74, 52, '#c3a2ff']]
+      .map(([x, y, c], i) => `<rect x="${x}" y="${y}" width="9" height="5" rx="1.5" fill="${c}" transform="rotate(${i * 37} ${x + 4} ${y + 2})"/>`).join(''),
+    // 쿨쿨: Z 글자들
+    zzz: () => [[78, 28, 12], [96, 46, 9], [24, 44, 8]].map(([x, y, s]) =>
+      `<path d="M${x} ${y} h${s} l${-s} ${s} h${s}" fill="none" stroke="#6f8fc0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`).join('') +
+      '<path d="M30 112 a12 12 0 1 0 14 -14 a9 9 0 1 1 -14 14 Z" fill="#ffe27a" opacity=".85"/>',
+    // 핵융합 반숙: 안에서 번지는 빛
+    glow: () => [[46, 0.18], [34, 0.22], [22, 0.3]].map(([r, op]) => `<circle cx="60" cy="74" r="${r}" fill="#ff9a3c" opacity="${op}"/>`).join(''),
+    // 분리수거 표시
+    recycle: () => '<g transform="translate(84 42)" fill="none" stroke="#2f9a62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85">' +
+      '<path d="M-4 -10 L4 -10 L9 -2 M9 -2 L11 -7 M9 -2 L4 -1"/><path d="M12 4 L8 11 L-2 11 M-2 11 L2 14 M-2 11 L1 7"/><path d="M-10 6 L-14 -1 L-9 -9 M-9 -9 L-10 -4 M-9 -9 L-4 -8"/></g>' +
+      dots([[26, 96, 3], [98, 100, 2.5], [40, 124, 2.5]], '#2f9a62', 0.6),
+    // 보석: 깎은 면
+    gem: () => '<path d="M60 6 L30 40 L60 70 Z M60 6 L90 40 L60 70 Z" fill="#ffffff" opacity=".25"/>' +
+      '<path d="M60 6 L30 40 L60 70 L90 40 Z M30 40 L8 88 L60 70 M90 40 L112 88 L60 70 M8 88 L60 136 L60 70 M112 88 L60 136" fill="none" stroke="#ffffff" stroke-width="2" opacity=".75"/>' +
+      spark(84, 30, 7, '#ffffff', 0.95),
   };
 
   // 모자는 계란 꼭대기(y=6)에 맞춰 그렸다. 병아리 머리에는 아래로 옮겨 씌운다.
@@ -113,7 +199,25 @@ window.Art = (() => {
       '<path class="ink" d="M24 22 C24 -18 96 -18 96 22 L88 14 L80 22 L72 14 L64 22 L56 14 L48 22 L40 14 L32 22 Z" fill="#fff6e6"/>' +
       '<path d="M38 2 C42 -6 50 -10 58 -11" stroke="#fff" stroke-width="4" fill="none" opacity=".8"/>' +
       '<path class="ln thin" d="M74 -10 L80 -24"/><circle class="ink" cx="81" cy="-26" r="4" fill="#ffd34d"/>',
+    // ── v3.2 ── (glasses와 ring은 얼굴·몸통 높이에 그린다. 병아리에게 씌울 때의 높이는 HAT_DY)
+    glasses:
+      '<circle class="ink" cx="45" cy="84" r="10" fill="#bfe3f5" fill-opacity=".35"/><circle class="ink" cx="75" cy="84" r="10" fill="#bfe3f5" fill-opacity=".35"/>' +
+      '<path class="ln" d="M55 84 H65 M35 82 L25 77 M85 82 L95 77"/>',
+    bow:
+      '<path class="ink" d="M60 6 C46 -12 28 -8 32 7 C35 18 50 14 60 6 Z" fill="#e05a47"/>' +
+      '<path class="ink" d="M60 6 C74 -12 92 -8 88 7 C85 18 70 14 60 6 Z" fill="#e05a47"/>' +
+      '<path class="ink" d="M56 9 L50 24 L57 20 M64 9 L70 24 L63 20" fill="#c8413a"/><circle class="ink" cx="60" cy="6" r="6" fill="#c8413a"/>',
+    ring:
+      '<path d="M-6 92 A66 16 0 0 0 126 92" fill="none" stroke="#e9c46a" stroke-width="8" transform="rotate(-10 60 92)"/>' +
+      '<path d="M-6 92 A66 16 0 0 0 126 92" fill="none" stroke="#b8923f" stroke-width="2" transform="rotate(-10 60 92)"/>',
+    lettuce:
+      '<path class="ink" d="M24 18 C20 0 36 -6 44 4 C46 -10 64 -12 66 2 C72 -10 92 -6 92 8 C100 10 98 22 90 20 C70 26 44 26 28 22 C20 22 18 18 24 18 Z" fill="#7cc46a"/>' +
+      '<path d="M44 6 L48 20 M66 4 L64 20 M88 10 L82 20" stroke="#4f8a3d" stroke-width="2" stroke-linecap="round"/>',
+    comb:
+      '<path class="ink" d="M38 14 C32 0 42 -8 48 0 C48 -14 62 -16 64 -2 C68 -14 82 -10 80 2 C88 0 90 12 82 14 Z" fill="#e0392b"/>',
   };
+  const FACE_HATS = ['glasses', 'ring']; // 꼭대기가 아닌 곳에 그리는 것 (병아리도 머리털을 그대로 둔다)
+  const HAT_DY = { glasses: -18, ring: -12 }; // 병아리에게 씌울 때 위아래로 옮기는 값 (나머지는 30)
 
   // 엔딩 그림 소품: back은 몸 뒤에, front는 몸 앞에 그린다.
   const smallChick = (x, y) =>
@@ -261,12 +365,12 @@ window.Art = (() => {
 
   // 껍질을 깨고 나온 병아리. 아래 껍질 조각은 스킨 색과 무늬를 따른다.
   function chickBody(skin, hat) {
-    return (hat && HATS[hat] ? '' : TUFT) +
+    return (hat && HATS[hat] && !FACE_HATS.includes(hat) ? '' : TUFT) +
       '<circle class="ink" cx="60" cy="72" r="36" fill="#ffd84d"/>' +
       '<g class="face"><circle cx="48" cy="66" r="4"/><circle cx="72" cy="66" r="4"/></g>' +
       '<path class="ink" d="M53 76 L67 76 L60 86 Z" fill="#f08a24"/>' +
       '<ellipse cx="36" cy="80" rx="6" ry="3.5" fill="#f4a19b" opacity=".8"/><ellipse cx="84" cy="80" rx="6" ry="3.5" fill="#f4a19b" opacity=".8"/>' +
-      shellLayer(skin, HALF_SHELL) + hatOf(hat, 30);
+      shellLayer(skin, HALF_SHELL) + hatOf(hat, hat in HAT_DY ? HAT_DY[hat] : 30);
   }
 
   // 요리가 된 계란이들
@@ -599,5 +703,9 @@ window.Art = (() => {
     return `<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw()}</svg>`;
   }
 
-  return { egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]), sceneKeys: () => Object.keys(SCENES) };
+  return {
+    egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]), sceneKeys: () => Object.keys(SCENES),
+    // 점검용: 쓸 수 있는 무늬·모자·소품·요리 그림 이름
+    names: { patterns: Object.keys(PATTERNS), hats: Object.keys(HATS), props: Object.keys(PROPS), foods: Object.keys(FOODS) },
+  };
 })();

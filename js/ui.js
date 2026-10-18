@@ -148,10 +148,13 @@ window.UI = (() => {
   }
 
   // ---------- 스킨 ----------
+  const kindSeen = (kind) => endIds.filter((id) => S.endings[id].kind === kind && Store.book.endings[id]).length;
   function isUnlocked(skin) {
     const u = skin.unlock;
     if (!u || window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
     if (u.ending) return Boolean(Store.book.endings[u.ending]);
+    if (u.story) return storySeen(storyOf(u.story)) >= storyEnds(storyOf(u.story)).length;
+    if (u.kind) return kindSeen(u.kind) >= u.n;
     if (u.count === 'all') return seenCount() >= endIds.length;
     if (u.count) return seenCount() >= u.count;
     return false;
@@ -168,8 +171,20 @@ window.UI = (() => {
       const no = endingNo(u.ending);
       return `${no.story.era} 엔딩 ${pad(no.n)} 발견하기`;
     }
-    if (u.count === 'all') return '모든 엔딩 발견하기';
-    return `엔딩 ${u.count}개 발견하기`;
+    if (u.story) {
+      const s = storyOf(u.story);
+      return `${s.era} 엔딩 모두 모으기 (${storySeen(s)}/${storyEnds(s).length})`;
+    }
+    if (u.kind) return `${KIND[u.kind]} ${u.n}개 보기 (${Math.min(kindSeen(u.kind), u.n)}/${u.n})`;
+    if (u.count === 'all') return `모든 엔딩 발견하기 (${seenCount()}/${endIds.length})`;
+    return `엔딩 ${u.count}개 발견하기 (${Math.min(seenCount(), u.count)}/${u.count})`;
+  }
+  // 옷장 묶음: 처음부터 · 이야기별 엔딩 · 모으기 보상
+  function skinGroup(skin) {
+    const u = skin.unlock;
+    if (!u) return 'base';
+    if (u.ending && S.endings[u.ending]) return S.endings[u.ending].story;
+    return 'reward';
   }
   const endingArt = (e, label) => Art.ending(e.look, label || e.title);
 
@@ -333,13 +348,20 @@ window.UI = (() => {
     $('closetName').textContent = cur.name;
     $('closetDesc').textContent = cur.desc;
     $('closetCount').textContent = `${unlockedSkins().length} / ${M.skins.length}개 모음 · 엔딩을 볼수록 늘어나요`;
-    $('skinGrid').innerHTML = M.skins.map((sk) => {
+    const cell = (sk) => {
       const open = isUnlocked(sk);
       const on = sk.id === cur.id;
       return `<li><button type="button" class="skin${open ? '' : ' locked'}${on ? ' on' : ''}" data-skin="${sk.id}" aria-pressed="${on}">` +
         `<span class="egg">${open ? Art.egg(sk, { mood: 'calm', label: sk.name }) : Art.mystery('잠긴 스킨')}</span>` +
         `<span>${open ? esc(sk.name) : '???'}</span>` +
         `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : esc(condText(sk))}</span></button></li>`;
+    };
+    const groups = [['base', '처음부터 있는 계란'], ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`]), ['reward', '모으기 보상']];
+    $('skinGrid').innerHTML = groups.map(([g, name]) => {
+      const list = M.skins.filter((sk) => skinGroup(sk) === g);
+      if (!list.length) return '';
+      return `<section class="skin-group" data-era="${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
+        `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`;
     }).join('');
   }
   $('skinGrid').addEventListener('click', (ev) => {
