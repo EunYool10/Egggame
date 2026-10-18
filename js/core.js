@@ -97,6 +97,12 @@ window.Store = (() => {
       book = normalize(next);
       write(keyOf(KEY.book), book);
     },
+    // 관리자 화면에서 도감을 직접 고칠 때 (계정에도 올린다)
+    editBook(fn) {
+      fn(book);
+      book = normalize(book);
+      saveBook();
+    },
     merge,
     // 게스트 기록을 꺼내 본다 (계정으로 옮긴 뒤에는 clearGuest로 비운다).
     guestData() {
@@ -214,6 +220,12 @@ window.Sound = (() => {
     bad: () => arp([392, 370, 349, 262], 0.18, { type: 'triangle', vol: 0.13, dur: 0.38 }),
     win: () => arp([659, 880, 1319], 0.06, { type: 'square', vol: 0.06, dur: 0.16 }),
     lose: () => tone(300, 0.36, { type: 'square', vol: 0.07, slide: 0.5 }),
+    // 미니게임: 연타 한 번, 순서 기억 패드 네 개의 음
+    mash: () => tone(700 + Math.random() * 200, 0.05, { type: 'square', vol: 0.045, slide: 1.4 }),
+    pad0: () => tone(523.25, 0.26, { type: 'triangle', vol: 0.13 }),
+    pad1: () => tone(659.25, 0.26, { type: 'triangle', vol: 0.13 }),
+    pad2: () => tone(783.99, 0.26, { type: 'triangle', vol: 0.13 }),
+    pad3: () => tone(1046.5, 0.26, { type: 'triangle', vol: 0.13 }),
   };
 
   function play(name) {

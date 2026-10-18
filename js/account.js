@@ -127,6 +127,7 @@ window.Account = (() => {
   // ---------- 로그인 상태 ----------
   async function onUser(u) {
     user = u;
+    window.App.adminAccount = false;
     window.App.admin = false;
     ready = false;
     if (!u) {
@@ -139,13 +140,15 @@ window.Account = (() => {
     lastUid.set(u.uid);
     Store.useProfile(u.uid);
     setState('user');
-    window.App.admin = await isAdmin(u);
+    // adminAccount: 관리자 계정인지, admin: 지금 관리자 권한을 쓰는지 (관리자 뷰어의 '일반 플레이어로 보기'로 끌 수 있다)
+    window.App.adminAccount = await isAdmin(u);
+    window.App.admin = window.App.adminAccount && !(window.App.adminOpts && window.App.adminOpts.player);
     await pull();
     refresh();
     if (greet) {
       greet = false;
       Sound.play('friend');
-      UI.toast(`<b>${esc(nameOf(u))}</b>님, 반가워요!${window.App.admin ? ' 관리자 권한이 켜졌어요.' : ''}`);
+      UI.toast(`<b>${esc(nameOf(u))}</b>님, 반가워요!${window.App.adminAccount ? ' 관리자 뷰어를 쓸 수 있어요.' : ''}`);
     }
   }
 
@@ -262,7 +265,7 @@ window.Account = (() => {
     } else if (state === 'user' && user) {
       const name = nameOf(user);
       box.innerHTML = `<span class="avatar" aria-hidden="true">${esc(name.slice(0, 1))}</span>` +
-        `<span class="who"><b>${esc(name)}</b>${window.App.admin ? '<span class="admin-badge">관리자</span>' : ''}` +
+        `<span class="who"><b>${esc(name)}</b>${window.App.adminAccount ? '<span class="admin-badge">관리자</span>' : ''}` +
         `<small>${SYNC_TEXT[sync] || '로그인됨'}</small></span>` +
         '<button type="button" class="btn small" data-acc="logout">로그아웃</button>';
     } else {

@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Jua&display=swap">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 <div class="app" id="app">
@@ -47,7 +48,7 @@
         <button type="button" class="tile" id="btnHelp"><span>플레이 방법</span><small>처음이라면</small></button>
         <button type="button" class="tile" id="btnCredits"><span>만든 사람들</span><small>크레딧</small></button>
       </div>
-      <button type="button" class="btn admin-btn" id="btnAdmin" hidden>관리자 메뉴</button>
+      <button type="button" class="btn admin-btn" id="btnAdmin" hidden>관리자 뷰어</button>
     </nav>
     <p class="title-foot" id="titleFoot"></p>
   </section>
@@ -90,6 +91,7 @@
     <div class="stage" id="stage">
       <div class="backdrop" id="backdrop"></div>
       <span class="stage-tag" id="stageTag"></span>
+      <span class="pips" id="pips" role="img" aria-label="진행한 장"></span>
       <div class="egg stage-egg" id="egg"></div>
       <div class="floaters" id="floaters" aria-hidden="true"></div>
     </div>
@@ -128,6 +130,7 @@
     <div class="narr story" id="endText"></div>
     <div class="unlocks" id="endUnlocks" hidden></div>
     <dl class="stats four" id="endStats"></dl>
+    <div class="end-next" id="endNext"></div>
     <details class="route">
       <summary>지나온 길</summary>
       <ol id="endRoute"></ol>
@@ -209,7 +212,18 @@
     </div>
   </section>
 
-  <!-- 공용 창 (확인, 일시정지 메뉴, 가방, 지난 이야기, 이야기 시작 카드, 플레이 방법) -->
+  <!-- 관리자 뷰어 (관리자 계정에만 보인다) -->
+  <section class="screen page admin-page" id="admin" hidden>
+    <header class="page-head">
+      <button type="button" class="btn small back" data-back>← 뒤로</button>
+      <h2>관리자 뷰어</h2>
+    </header>
+    <p class="page-lead">관리자 계정에만 보여요. 여기서 바꾼 것은 지금 모험과 이 계정의 기록에 바로 반영돼요.</p>
+    <div class="tabs admin-tabs" id="adminTabs" role="tablist" aria-label="관리자 메뉴"></div>
+    <div class="admin-panel" id="adminPanel"></div>
+  </section>
+
+  <!-- 공용 창 (확인, 일시정지 메뉴, 가방, 지난 이야기, 이야기 시작 카드, 플레이 방법, 엔딩 다시 읽기) -->
   <div class="overlay" id="modal" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h2 id="modalTitle"></h2>
@@ -218,19 +232,15 @@
     </div>
   </div>
 
-  <!-- 미니게임 -->
+  <!-- 미니게임 (종류마다 game-body 안을 js/minigames.js가 채운다) -->
   <div class="overlay" id="minigame" hidden>
     <div class="sheet game-sheet" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
-      <p class="eyebrow">미니게임 · <span id="gameLevel"></span></p>
+      <p class="eyebrow"><span id="gameType"></span> · <span id="gameLevel"></span></p>
       <h2 id="gameTitle"></h2>
-      <p id="gameHint"></p>
-      <div class="track" id="gameTrack">
-        <div class="zone" id="gameZone"></div>
-        <div class="marker" id="gameMarker"></div>
-      </div>
+      <p class="game-hint" id="gameHint"></p>
+      <div class="game-body" id="gameBody"></div>
       <p class="game-result" id="gameResult" aria-live="assertive"></p>
-      <button type="button" class="btn primary big" id="gameGo">지금!</button>
-      <p class="hint">스페이스바나 엔터로도 누를 수 있어요.</p>
+      <p class="hint" id="gameKeys"></p>
     </div>
   </div>
 
@@ -245,7 +255,9 @@
 <script src="js/core.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/account.js"></script>
+<script src="js/minigames.js"></script>
 <script src="js/game.js"></script>
+<script src="js/admin.js"></script>
 <!-- @@PAGE-END@@ -->
 </body>
 </html>

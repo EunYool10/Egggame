@@ -62,23 +62,24 @@ service cloud.firestore {
     function endingIds() {
       return ['e_hatch', 'e_twins', 'e_party', 'e_crayfish', 'e_helmet', 'e_late', 'e_school', 'e_easter',
         'e_treasure', 'e_seoul', 'e_lucky', 'e_vlog', 'e_factory', 'e_jangjorim', 'e_omelet', 'e_baked',
-        'e_tteok', 'e_forest', 'e_sunfry', 'e_again', 'e_crash', 'e_g_hatch', 'e_g_party', 'e_g_king',
-        'e_g_museum', 'e_g_alji', 'e_g_crack', 'e_g_late', 'e_g_dragon', 'e_g_ayuta', 'e_g_song', 'e_g_baked',
-        'e_g_tiger', 'e_g_fox', 'e_g_crash', 'e_f_hatch', 'e_f_party', 'e_f_alien', 'e_f_helmet', 'e_f_late',
-        'e_f_robot', 'e_f_moon', 'e_f_saturn', 'e_f_omelet', 'e_f_engine', 'e_f_salad', 'e_f_trash', 'e_f_crash'];
+        'e_tteok', 'e_forest', 'e_sunfry', 'e_again', 'e_chicken', 'e_crash', 'e_g_hatch', 'e_g_party',
+        'e_g_king', 'e_g_museum', 'e_g_alji', 'e_g_crack', 'e_g_late', 'e_g_dragon', 'e_g_ayuta', 'e_g_song',
+        'e_g_baked', 'e_g_tiger', 'e_g_fox', 'e_g_crash', 'e_f_hatch', 'e_f_party', 'e_f_alien', 'e_f_helmet',
+        'e_f_late', 'e_f_robot', 'e_f_moon', 'e_f_saturn', 'e_f_omelet', 'e_f_engine', 'e_f_salad',
+        'e_f_trash', 'e_f_crash'];
     }
 
     function sceneIds() {
       return ['start', 'elder', 'swap', 'kitchen', 'living', 'ondol', 'cat', 'basket', 'roof', 'market',
-        'truck', 'yard', 'dog', 'alley', 'farm', 'stream', 'field', 'storm', 'collect', 'g_start', 'g_box',
-        'g_pine', 'g_kiln', 'g_smithy', 'g_port', 'g_river', 'g_pass', 'g_gyerim', 'g_frost', 'f_start',
-        'f_corridor', 'f_engine', 'f_garden', 'f_window', 'f_pod', 'f_mars', 'f_dust'];
+        'truck', 'yard', 'dog', 'alley', 'farm', 'stream', 'field', 'storm', 'collect', 'hatchery', 'g_start',
+        'g_box', 'g_pine', 'g_kiln', 'g_smithy', 'g_port', 'g_river', 'g_pass', 'g_gyerim', 'g_frost',
+        'f_start', 'f_corridor', 'f_engine', 'f_garden', 'f_window', 'f_pod', 'f_mars', 'f_dust'];
     }
 
     function skinIds() {
       return ['white', 'brown', 'quail', 'blue', 'easter', 'jangjorim', 'baked', 'tteok', 'bandage', 'helmet',
-        'crown', 'beret', 'party', 'stamp', 'vlog', 'gold', 'jade', 'gaya', 'clay', 'pearl', 'mars', 'moon',
-        'alien', 'robot', 'dino', 'rainbow'];
+        'crown', 'beret', 'party', 'stamp', 'vlog', 'crispy', 'gold', 'jade', 'gaya', 'clay', 'pearl', 'mars',
+        'moon', 'alien', 'robot', 'dino', 'rainbow'];
     }
 
     // Only the ending ids are checked. Checking all 48 counts one by one passes the

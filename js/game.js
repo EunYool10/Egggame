@@ -1,4 +1,4 @@
-// 계란이의 모험 v3 — 게임 진행 (이야기 고르기, 장면, 선택, 아이템·친구, 미니게임, 엔딩, 저장, 입력)
+// 계란이의 모험 v3 — 게임 진행 (이야기 고르기, 장면, 선택, 아이템·친구, 미니게임 연결, 엔딩, 저장, 입력)
 (() => {
   'use strict';
 
@@ -8,6 +8,7 @@
   const Store = window.Store;
   const Sound = window.Sound;
   const UI = window.UI;
+  const Minigames = window.Minigames;
   const $ = (id) => document.getElementById(id);
   const { esc, pad, KIND } = UI;
 
@@ -22,6 +23,8 @@
   let skip = () => {};
   let shownBg = null;
   let busy = false; // 미니게임이나 화면 전환 중에는 선택을 막는다
+  let running = false; // 이번 방문에서 모험을 진행 중인지 (엔딩을 보면 끝난다)
+  let dirty = false; // 진행 화면 밖(관리자 화면)에서 상태가 바뀌었는지
 
   function fresh(storyId) {
     const s = UI.storyOf(storyId);
@@ -34,6 +37,8 @@
   const nameOf = (id) => (M.items[id] || M.friends[id] || { name: id }).name;
   const skin = () => UI.currentSkin();
   const shieldId = () => st.bag.find((id) => M.items[id] && M.items[id].shield);
+  // 관리자 옵션 (관리자 화면 → 옵션 탭)
+  const opt = (k) => Boolean(window.App.admin && window.App.adminOpts && window.App.adminOpts[k]);
   // 받침이 있으면 '이', 없으면 '가'
   const iga = (word) => {
     const code = word.charCodeAt(word.length - 1) - 0xac00;
@@ -41,14 +46,14 @@
   };
 
   // ---------- 조건과 본문 ----------
-  function meets(need) {
+  function meets(need, state = st) {
     if (!need) return false;
-    if (Array.isArray(need)) return need.every(meets);
-    if (typeof need === 'string') return st.bag.includes(need) || st.friends.includes(need);
-    if (need.friends) return st.friends.length >= need.friends;
-    if (need.from) return [].concat(need.from).includes(st.from);
-    if (need.flag) return st.flags.includes(need.flag);
-    if (need.cracked) return st.c > 0;
+    if (Array.isArray(need)) return need.every((n) => meets(n, state));
+    if (typeof need === 'string') return state.bag.includes(need) || state.friends.includes(need);
+    if (need.friends) return state.friends.length >= need.friends;
+    if (need.from) return [].concat(need.from).includes(state.from);
+    if (need.flag) return state.flags.includes(need.flag);
+    if (need.cracked) return state.c > 0;
     return false;
   }
   function fill(text) {
@@ -74,6 +79,14 @@
       $('shield').title = `${iga(M.items[shield].name)} 다음 충격을 막아 줘요`;
     }
     $('bagCount').textContent = st.bag.length + st.friends.length;
+    const sc = S.scenes[st.node];
+    if (sc && !sc.branch) {
+      // 장 진행 표시: 이 이야기의 마지막 장까지 몇 장째인지
+      const last = Math.max(...Object.values(story().scenes).map((x) => x.ch || 0));
+      $('pips').innerHTML = Array.from({ length: last }, (_, i) => `<i class="${i < sc.ch ? 'on' : ''}"></i>`).join('');
+      $('pips').setAttribute('aria-label', `${last}장 가운데 ${sc.ch}장`);
+      $('place').innerHTML = esc(sc.place) + (opt('ids') ? ` <small class="sid">${esc(st.node)}</small>` : '');
+    }
   }
 
   function chipsHTML(notes) {
@@ -103,6 +116,12 @@
     void el.offsetWidth; // 애니메이션을 다시 시작
     el.classList.add(hit ? 'hit' : 'enter');
   }
+  function fadeIn(el) {
+    el.classList.remove('fade-in');
+    if (UI.reduceMotion()) return;
+    void el.offsetWidth;
+    el.classList.add('fade-in');
+  }
 
   // ---------- 장면 ----------
   function renderScene() {
@@ -110,10 +129,9 @@
     const s = story();
     if (UI.current !== 'play') UI.show('play');
     $('play').dataset.era = s.id;
-    hud();
     $('chap').textContent = `${sc.ch}장`;
     $('stageTag').textContent = `${s.era} · ${s.title}`;
-    $('place').textContent = sc.place;
+    hud();
     if (shownBg !== sc.bg) {
       $('backdrop').innerHTML = Art.scene(sc.bg);
       shownBg = sc.bg;
@@ -123,6 +141,7 @@
     animateEgg(egg, st.notes.some((n) => n.cls === 'crack'));
     setSay($('say'));
     floaters();
+    fadeIn($('dialog'));
     $('btnUndo').disabled = !st.hist.length;
     typeText(lines(sc.text), (typed) => renderChoices(sc, typed));
   }
@@ -146,7 +165,7 @@
     };
     skip = () => finish(true);
     const speed = SPEED[Store.settings.speed];
-    if (!speed || UI.reduceMotion()) return finish(false);
+    if (!speed || UI.reduceMotion() || opt('instant')) return finish(false);
     const [step, gap] = speed;
     let i = 0;
     let j = 0;
@@ -163,13 +182,42 @@
     }, gap);
   }
 
+  // 선택지가 실제로 가는 곳 (조건을 채우면 alt의 to)
+  const targetOf = (ch) => (ch.alt && meets(ch.alt.need) && ch.alt.to) || ch.to;
+  const seen = (id) => (S.endings[id] ? Boolean(Store.book.endings[id]) : Boolean(S.scenes[id] && !S.scenes[id].branch && Store.book.scenes[id]));
+
+  // 관리자 '선택지 결과 미리 보기': 어디로 가고 무엇이 바뀌는지 한 줄로
+  function peekLine(ch) {
+    const where = (id) => (S.endings[id] ? `엔딩 「${S.endings[id].title}」` : S.scenes[id] && S.scenes[id].branch ? '둥지(상태로 결정)' : S.scenes[id] ? S.scenes[id].place : id);
+    const fxText = (r) => {
+      const out = [];
+      const fx = r.fx || {};
+      if (fx.t) out.push(`온기 ${fx.t > 0 ? '+' : ''}${fx.t}`);
+      if (fx.c) out.push(`금 +${fx.c}`);
+      (r.gain || []).forEach((id) => out.push(`+${nameOf(id)}`));
+      (r.use || []).forEach((id) => out.push(`-${nameOf(id)}`));
+      return out.join(' · ');
+    };
+    const parts = [`→ ${where(ch.to)}`, fxText(ch)].filter(Boolean);
+    if (ch.game) {
+      const w = ch.game.win || {};
+      const l = ch.game.lose || {};
+      parts.push(`성공: ${[w.to ? where(w.to) : '', fxText(w)].filter(Boolean).join(' · ') || '그대로'}`);
+      parts.push(`실패: ${[l.to ? where(l.to) : '', fxText(l)].filter(Boolean).join(' · ') || '그대로'}`);
+    }
+    if (ch.alt) parts.push(`${meets(ch.alt.need) ? '조건 충족' : '조건 미충족'}: ${[ch.alt.to ? where(ch.alt.to) : '', fxText(ch.alt)].filter(Boolean).join(' · ') || '문장만 바뀜'}`);
+    return parts.join('  |  ');
+  }
+
   function renderChoices(sc, reveal = false) {
     $('choices').innerHTML = sc.choices.map((ch, i) => {
       const tags = [];
-      if (ch.game) tags.push(`<span class="tag game">미니게임 · ${esc(ch.game.title)}</span>`);
+      if (ch.game) tags.push(`<span class="tag game">${esc(Minigames.label(ch.game))} 게임 · ${esc(ch.game.title)}</span>`);
       if (ch.alt && meets(ch.alt.need)) tags.push(`<span class="tag alt">${esc(ch.alt.tag)}</span>`);
+      if (seen(targetOf(ch))) tags.push('<span class="tag seen">가 본 길</span>');
+      const peek = opt('peek') ? `<span class="peek">${esc(peekLine(ch))}</span>` : '';
       return `<button type="button" class="choice" data-i="${i}"><span class="key">${LETTERS[i]}</span>` +
-        `<span class="lbl">${esc(ch.label)}</span>${tags.length ? `<span class="tags">${tags.join('')}</span>` : ''}</button>`;
+        `<span class="lbl">${esc(ch.label)}</span>${tags.length ? `<span class="tags">${tags.join('')}</span>` : ''}${peek}</button>`;
     }).join('');
     // 휴대폰처럼 화면이 작으면, 글을 다 읽었을 때 선택지가 화면 아래로 숨지 않게 살짝 올려 준다.
     const box = $('choices');
@@ -178,10 +226,30 @@
     }
   }
 
+  // 진행 화면 밖에서 상태를 바꾼 뒤 글은 그대로 두고 상단, 계란, 선택지만 다시 그린다.
+  function refresh() {
+    const sc = S.scenes[st.node];
+    if (!sc || sc.branch || UI.current !== 'play') return;
+    hud();
+    $('egg').innerHTML = Art.egg(skin(), { mood: sc.mood, cracks: st.c, label: `계란이 (${sc.place})` });
+    $('btnUndo').disabled = !st.hist.length;
+    if (!typing) renderChoices(sc);
+  }
+
   // ---------- 선택 ----------
   function snapshot() {
     const { hist, ...rest } = st;
     return JSON.parse(JSON.stringify(rest));
+  }
+
+  function play(game, done) {
+    if (opt('autoWin')) {
+      UI.toast(`관리자: <b>${esc(game.title)}</b> 자동 성공`);
+      Sound.play('win');
+      done(true);
+      return;
+    }
+    Minigames.run(game, done);
   }
 
   function choose(i) {
@@ -192,7 +260,7 @@
     Sound.play('pick');
     if (!ch.game) { apply(ch, i, null); return; }
     busy = true;
-    minigame(ch.game, (win) => {
+    play(ch.game, (win) => {
       busy = false;
       apply(ch, i, ch.game[win ? 'win' : 'lose']);
     });
@@ -278,11 +346,14 @@
     go(next);
   }
 
-  function go(id) {
+  // record가 거짓이면 엔딩을 도감에 기록하지 않는다 (관리자 미리 보기)
+  function go(id, record = true) {
     st.node = id;
     if (S.endings[id]) {
-      renderEnding();
+      running = false;
+      renderEnding(record);
     } else {
+      running = true;
       Store.markScene(id);
       renderScene();
       save();
@@ -355,75 +426,13 @@
     go(st.node);
   }
 
-  // ---------- 미니게임: 왔다 갔다 하는 계란이를 노란 칸에서 멈추기 ----------
-  const DIFF = { easy: { zone: 0.3, speed: 0.75 }, normal: { zone: 0.2, speed: 1 }, hard: { zone: 0.13, speed: 1.35 } };
-  let press = null;
-
-  function minigame(game, done) {
-    if (window.App.admin && window.App.autoWin) {
-      UI.toast(`관리자: <b>${esc(game.title)}</b> 자동 성공`);
-      Sound.play('win');
-      done(true);
-      return;
-    }
-    const level = DIFF[Store.settings.difficulty] ? Store.settings.difficulty : 'normal';
-    const d = DIFF[level];
-    const left = 0.12 + Math.random() * (0.76 - d.zone);
-    const vel = 0.85 * d.speed * (game.speed || 1) * (UI.reduceMotion() ? 0.7 : 1); // 1초에 트랙 몇 바퀴
-    const marker = $('gameMarker');
-    const btn = $('gameGo');
-    const result = $('gameResult');
-    $('gameLevel').textContent = { easy: '쉬움', normal: '보통', hard: '어려움' }[level];
-    $('gameTitle').textContent = game.title;
-    $('gameHint').textContent = game.hint;
-    $('gameZone').style.left = left * 100 + '%';
-    $('gameZone').style.width = d.zone * 100 + '%';
-    marker.style.left = '0%';
-    result.textContent = '';
-    result.className = 'game-result';
-    btn.disabled = false;
-    $('minigame').hidden = false;
-    btn.focus();
-
-    let pos = 0;
-    let dir = 1;
-    let last = performance.now();
-    let raf = 0;
-    const frame = (now) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      pos += dir * vel * dt;
-      if (pos > 1) { pos = 2 - pos; dir = -1; }
-      if (pos < 0) { pos = -pos; dir = 1; }
-      marker.style.left = pos * 100 + '%';
-      raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-
-    press = () => {
-      press = null;
-      cancelAnimationFrame(raf);
-      btn.disabled = true;
-      const win = pos >= left - 0.02 && pos <= left + d.zone + 0.02; // 계란 몸통만큼 살짝 봐준다
-      result.textContent = win ? '성공!' : '아깝다!';
-      result.classList.add(win ? 'win' : 'lose');
-      Sound.play(win ? 'win' : 'lose');
-      setTimeout(() => {
-        $('minigame').hidden = true;
-        done(win);
-      }, 900);
-    };
-  }
-  $('gameGo').addEventListener('click', () => { if (press) press(); });
-  $('gameTrack').addEventListener('pointerdown', () => { if (press) press(); });
-
   // ---------- 엔딩 ----------
-  function renderEnding() {
+  function renderEnding(record = true) {
     const e = S.endings[st.node];
     const no = UI.endingNo(st.node);
     const before = new Set(UI.unlockedSkins().map((k) => k.id));
-    const isNew = Store.markEnding(st.node, st.steps, e.kind);
-    Store.clearRun();
+    const isNew = record ? Store.markEnding(st.node, st.steps, e.kind) : false;
+    if (record) Store.clearRun();
     const unlocked = UI.unlockedSkins().filter((k) => !before.has(k.id));
     UI.show('end');
 
@@ -452,13 +461,35 @@
       `<div><dt>껍질의 금</dt><dd>${st.c} / ${MAX_CRACK}</dd></div>` +
       `<div><dt>고른 선택지</dt><dd>${st.steps}개</dd></div>` +
       `<div><dt>사귄 친구</dt><dd>${st.friends.length}명</dd></div>`;
+    renderNext(no.story);
     $('endRoute').innerHTML = st.log.map((l) => `<li><b>${esc(l.place)}</b> <span class="pick">${esc(l.pick)}</span></li>`).join('');
     $('btnEndUndo').disabled = !st.hist.length;
     $('btnRetry').textContent = `${no.story.era} 이야기 다시`;
 
     Sound.play(e.kind === 'bad' ? 'bad' : 'good');
     if (st.node === story().crash) Sound.buzz([120, 60, 200]);
+    if (!record) UI.toast('관리자 미리 보기예요. 도감에는 기록하지 않았어요.');
     unlocked.forEach((k, n) => setTimeout(() => UI.toast(`새 스킨 해금: <b>${esc(k.name)}</b>`), 700 + n * 450));
+  }
+
+  // 엔딩 화면: 이 이야기에서 아직 못 본 엔딩 수와 힌트 하나
+  function renderNext(s) {
+    const left = Object.keys(s.endings).filter((id) => !Store.book.endings[id]);
+    const box = $('endNext');
+    if (!left.length) {
+      box.innerHTML = `<p><b>${esc(s.era)} 이야기의 엔딩을 모두 모았어요!</b> 다른 시대의 계란이도 만나 보세요.</p>`;
+      return;
+    }
+    box.innerHTML = `<p>${esc(s.era)} 이야기에서 아직 못 본 엔딩 <b>${left.length}개</b></p>` +
+      '<button type="button" class="btn small" data-next="hint">힌트 하나 보기</button>';
+    box.querySelector('[data-next="hint"]').addEventListener('click', (ev) => {
+      Sound.play('tap');
+      const id = left[Math.floor(Math.random() * left.length)];
+      const p = document.createElement('p');
+      p.className = 'hint-text';
+      p.textContent = `힌트: ${S.endings[id].hint}`;
+      ev.currentTarget.replaceWith(p);
+    });
   }
 
   function share() {
@@ -488,12 +519,12 @@
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
   function pauseMenu() {
     const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['help', '플레이 방법'], ['settings', '설정'], ['restart', '이 이야기 처음부터'], ['stories', '다른 이야기 고르기'], ['title', '타이틀로 (자동 저장됨)']];
-    if (window.App.admin) acts.splice(4, 0, ['admin', '관리자 메뉴']);
+    if (window.App.adminAccount) acts.splice(4, 0, ['admin', '관리자 뷰어']);
     const s = story();
     const body = UI.modal({
       title: '잠깐 멈춤',
       body: `<p class="hint">${esc(UI.storyLabel(s))} 「${esc(s.title)}」 · 목표: ${esc(s.goal)}</p>` +
-        `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn" data-act="${a}">${l}</button>`).join('')}</div>`,
+        `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn${a === 'admin' ? ' admin-btn' : ''}" data-act="${a}">${l}</button>`).join('')}</div>`,
       actions: [],
     });
     body.querySelector('.menu-list').addEventListener('click', (ev) => {
@@ -506,7 +537,7 @@
       else if (act === 'bag') showBag();
       else if (act === 'help') UI.help();
       else if (act === 'settings') UI.show('settings');
-      else if (act === 'admin') adminMenu();
+      else if (act === 'admin') UI.show('admin');
       else if (act === 'title') UI.show('title');
       else if (act === 'stories') UI.show('stories');
       else if (act === 'restart') {
@@ -531,75 +562,40 @@
     UI.modal({ title: '지난 이야기', body: items ? `<ol class="log-list">${items}</ol>` : '<p class="bag-empty">아직 지나온 장면이 없어요.</p>' });
   }
 
-  // ---------- 관리자 메뉴 (관리자 계정에만 보인다) ----------
-  function adminMenu() {
-    if (!window.App.admin) return;
-    const inPlay = UI.current === 'play';
-    const group = (fn) => S.stories.map((s) => `<optgroup label="${esc(UI.storyLabel(s))}">${fn(s)}</optgroup>`).join('');
-    const sceneOpts = group((s) => Object.entries(s.scenes).filter(([, sc]) => !sc.branch)
-      .map(([id, sc]) => `<option value="${id}">${sc.ch}장 · ${esc(sc.place)} (${id})</option>`).join(''));
-    const endOpts = group((s) => Object.keys(s.endings)
-      .map((id, i) => `<option value="${id}">${pad(i + 1)} · ${esc(s.endings[id].title)}</option>`).join(''));
-    const body = UI.modal({
-      title: '관리자 메뉴',
-      body: '<p class="hint">관리자 계정에만 보여요. 계란 옷장의 모든 스킨이 열려 있어요.</p>' +
-        `<div class="admin-row"><label for="admScene">장면 바로 가기</label><select id="admScene">${sceneOpts}</select>` +
-        '<button type="button" class="btn small" data-adm="scene">이동</button></div>' +
-        `<div class="admin-row"><label for="admEnding">엔딩 바로 보기</label><select id="admEnding">${endOpts}</select>` +
-        '<button type="button" class="btn small" data-adm="ending">보기</button></div>' +
-        (inPlay
-          ? '<div class="row"><button type="button" class="btn small" data-adm="warm">온기 +10℃</button>' +
-            '<button type="button" class="btn small" data-adm="cold">온기 -10℃</button>' +
-            '<button type="button" class="btn small" data-adm="heal">금 없애기</button>' +
-            '<button type="button" class="btn small" data-adm="all">이 이야기 아이템·친구 모두 받기</button></div>'
-          : '') +
-        `<label class="toggle" for="admAutoWin"><span>미니게임 항상 성공</span><input type="checkbox" id="admAutoWin"${window.App.autoWin ? ' checked' : ''}></label>`,
-    });
-    if (inPlay) {
-      const cur = body.querySelector(`#admScene option[value="${st.node}"]`);
-      if (cur) cur.selected = true;
-    }
-    body.querySelector('#admAutoWin').addEventListener('change', (ev) => {
-      window.App.autoWin = ev.target.checked;
-      UI.toast(ev.target.checked ? '미니게임을 항상 성공해요.' : '미니게임을 원래대로 해요.');
-    });
-    body.addEventListener('click', (ev) => {
-      const b = ev.target.closest('[data-adm]');
-      if (!b) return;
-      const act = b.dataset.adm;
-      const target = body.querySelector(act === 'ending' ? '#admEnding' : '#admScene').value;
-      UI.closeModal();
-      Sound.play('pick');
-      if (act === 'scene' || act === 'ending') {
-        const sid = (S.scenes[target] || S.endings[target]).story;
-        if (UI.current === 'play' && sid === st.story) st.hist.push(snapshot());
-        else { st = fresh(sid); shownBg = null; }
-        st.say = null;
-        st.notes = [];
-        go(target);
-        return;
-      }
-      if (act === 'warm') st.t = Math.min(40, st.t + 10);
-      if (act === 'cold') st.t = Math.max(0, st.t - 10);
-      if (act === 'heal') st.c = 0;
-      if (act === 'all') {
-        // 이 이야기에 나오는 아이템·친구만 받는다.
-        const own = new Set();
-        Object.values(story().scenes).forEach((sc) => (sc.choices || []).forEach((ch) => [ch, ch.alt || {}].forEach((x) => (x.gain || []).forEach((id) => own.add(id)))));
-        st.bag = [...own].filter((id) => M.items[id]);
-        st.friends = [...own].filter((id) => M.friends[id]);
-      }
-      hud();
-      $('egg').innerHTML = Art.egg(skin(), { mood: S.scenes[st.node].mood, cracks: st.c });
-      renderChoices(S.scenes[st.node]);
-      save();
-      UI.toast('관리자: 상태를 바꿨어요.');
-    });
-  }
-  window.App.adminMenu = adminMenu;
+  // ---------- 관리자 화면이 쓰는 진행 API ----------
+  window.App.game = {
+    get state() { return st; },
+    get running() { return running; },
+    nameOf, meets, fresh, peekLine,
+    // 상태 바꾸기: fn(st) 뒤에 저장하고 화면을 맞춘다.
+    update(fn) {
+      fn(st);
+      st.t = Math.max(0, Math.min(40, Number(st.t) || 0));
+      st.c = Math.max(0, Math.min(MAX_CRACK - 1, Math.round(st.c) || 0));
+      if (running) save();
+      if (UI.current === 'play') refresh();
+      else dirty = true;
+    },
+    // 장면이나 엔딩으로 바로 가기 (엔딩은 도감에 기록하지 않는 미리 보기)
+    jump(id) {
+      const target = S.scenes[id] || S.endings[id];
+      if (!target) return;
+      if (running && target.story === st.story) st.hist.push(snapshot());
+      else { st = fresh(target.story); shownBg = null; }
+      st.say = null;
+      st.notes = [];
+      go(id, false);
+    },
+    start(storyId) { newGame(storyId); },
+    resume: continueGame,
+    refresh,
+  };
+  window.App.onScreen = (id) => {
+    if (id === 'play' && dirty) { dirty = false; refresh(); }
+  };
 
   // ---------- 입력 ----------
-  $('btnAdmin').addEventListener('click', () => { Sound.play('tap'); adminMenu(); });
+  $('btnAdmin').addEventListener('click', () => { Sound.play('tap'); UI.show('admin'); });
   $('btnNew').addEventListener('click', () => {
     Sound.play('tap');
     if (!Store.settings.seenHelp) UI.help(() => UI.show('stories'));
@@ -628,13 +624,7 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const k = ev.key;
-    if (!$('minigame').hidden) {
-      if ((k === ' ' || k === 'Enter') && document.activeElement !== $('gameGo')) {
-        ev.preventDefault();
-        if (press) press();
-      }
-      return;
-    }
+    if (Minigames.active) { Minigames.key(ev); return; }
     if (UI.modalOpen) {
       if (k === 'Escape') UI.closeModal();
       else if (k === 'Tab') UI.trapFocus(ev, document.querySelector('#modal .sheet'));
@@ -646,7 +636,7 @@
       if (typing && (k === ' ' || k === 'Enter') && !onButton) { ev.preventDefault(); skip(); return; }
       const idx = { a: 0, b: 1, c: 2, 1: 0, 2: 1, 3: 2 }[k.toLowerCase()];
       if (idx !== undefined) choose(idx);
-    } else if (['stories', 'book', 'closet', 'settings', 'credits'].includes(UI.current) && k === 'Escape') {
+    } else if (['stories', 'book', 'closet', 'settings', 'credits', 'admin'].includes(UI.current) && k === 'Escape') {
       UI.back();
     }
   });
@@ -663,6 +653,7 @@
   window.App.onReset = () => {
     st = fresh();
     shownBg = null;
+    running = false;
   };
 
   // ---------- 시작 ----------

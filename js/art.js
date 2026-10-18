@@ -69,6 +69,9 @@ window.Art = (() => {
         spark(80, 30, 7, '#ffe27a', 1),
     rainbow: () => ['#ff8a8a', '#ffb86b', '#ffe27a', '#9be08a', '#86c5ff', '#c3a2ff'].map((c, i) =>
       `<rect x="-4" y="${i * 23}" width="128" height="23" fill="${c}" opacity=".7"/>`).join(''),
+    // 튀김옷: 울퉁불퉁한 바삭 무늬
+    crispy: () => dots([[24, 40, 5], [46, 26, 4], [70, 34, 5], [92, 52, 4.5], [30, 66, 4], [56, 58, 5], [84, 78, 5], [18, 92, 4.5], [44, 88, 4], [66, 104, 5], [96, 104, 4], [32, 118, 4.5], [58, 126, 4], [84, 124, 4.5]], '#b8691c', 0.5) +
+      dots([[34, 46, 3], [60, 40, 2.5], [80, 64, 3], [22, 80, 2.5], [50, 74, 3], [74, 92, 2.5], [40, 104, 3], [92, 90, 2.5], [68, 118, 2.5]], '#f6c66a', 0.9),
   };
 
   // 모자는 계란 꼭대기(y=6)에 맞춰 그렸다. 병아리 머리에는 아래로 옮겨 씌운다.
@@ -225,6 +228,14 @@ window.Art = (() => {
       front: '<path class="ink" d="M4 100 H116 L108 144 H12 Z" fill="#4f9a5a"/><rect class="ink" x="-2" y="92" width="124" height="12" rx="4" fill="#5fae6a"/>' +
         '<path d="M50 126 l10 -16 l10 16 Z" fill="none" stroke="#e7f5e9" stroke-width="3" stroke-linejoin="round"/>',
     },
+    // 치킨 상자 (줄무늬 종이 상자)
+    chickenbox: {
+      front: '<path class="ink" d="M-8 108 H128 L118 144 H2 Z" fill="#d8402c"/>' +
+        '<path d="M14 110 L18 144 M38 110 L40 144 M82 110 L80 144 M106 110 L102 144" stroke="#fff" stroke-width="6" opacity=".85"/>' +
+        '<rect class="ink" x="-10" y="104" width="140" height="9" rx="3" fill="#fff6e6"/>' +
+        '<ellipse class="ink" cx="60" cy="128" rx="25" ry="11" fill="#fff6e6"/>' +
+        '<text x="60" y="133" text-anchor="middle" font-size="14" font-weight="700" font-family="sans-serif" fill="#d8402c">B*C</text>',
+    },
   };
 
   const TUFT = '<path class="ln" d="M54 38 Q56 24 62 32 Q66 22 70 36"/>';
@@ -277,6 +288,17 @@ window.Art = (() => {
     halved: () => '<path class="ink" d="M8 100 C8 60 30 40 60 40 C90 40 112 60 112 100 C112 126 90 140 60 140 C30 140 8 126 8 100 Z" fill="#fffdf6"/>' +
       '<path class="ink" d="M60 66 C80 66 90 80 90 96 C90 104 86 110 84 118 C82 126 76 126 76 118 C76 112 70 116 60 116 C42 116 30 104 30 92 C30 78 42 66 60 66 Z" fill="#ffb21f"/>' +
       '<g class="face"><circle cx="50" cy="90" r="3.5"/><circle cx="70" cy="90" r="3.5"/></g><path class="ln" d="M54 102 Q60 97 66 102"/>',
+    // 닭다리 튀김 (뼈가 오른쪽 위로)
+    chicken: () => '<path d="M64 62 L98 26" stroke="#3b2f2a" stroke-width="27" stroke-linecap="round"/>' +
+      '<path d="M94 30 L112 10" stroke="#3b2f2a" stroke-width="13" stroke-linecap="round"/><path d="M94 30 L112 10" stroke="#fff6e6" stroke-width="8" stroke-linecap="round"/>' +
+      '<circle class="ink" cx="108" cy="3" r="6.5" fill="#fff6e6"/><circle class="ink" cx="119" cy="14" r="6.5" fill="#fff6e6"/>' +
+      '<ellipse class="ink" cx="48" cy="88" rx="44" ry="52" fill="#d98a2b" transform="rotate(38 48 88)"/>' +
+      '<path d="M66 60 L96 28" stroke="#d98a2b" stroke-width="21" stroke-linecap="round"/>' +
+      dots([[30, 64, 4], [46, 56, 3.5], [62, 70, 3.5], [22, 78, 3], [70, 84, 3], [40, 108, 3.5], [60, 100, 3], [18, 100, 3], [74, 58, 2.5], [84, 44, 2.5]], '#b8691c', 0.55) +
+      dots([[36, 70, 2.5], [54, 62, 2.5], [26, 92, 2.5], [64, 92, 2.5], [48, 112, 2.5], [78, 70, 2]], '#f3b456', 0.85) +
+      '<g class="face"><path class="ln" d="M28 84 Q33 77 38 84 M52 78 Q57 71 62 78"/></g><path class="ln" d="M38 96 Q47 104 56 94"/>' +
+      '<ellipse cx="24" cy="96" rx="6" ry="3.5" fill="#f4a19b" opacity=".75"/><ellipse cx="66" cy="88" rx="6" ry="3.5" fill="#f4a19b" opacity=".75"/>' +
+      spark(8, 26, 7, '#ffe27a') + spark(-2, 54, 4, '#ffe27a'),
   };
 
   // 계란이: mood 표정, cracks 금 개수, hat 모자(없으면 스킨 모자), label 대체 텍스트
@@ -305,6 +327,7 @@ window.Art = (() => {
   const E = (x, y, rx, ry, f, more = '') => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${f}" ${more}/>`;
   const P = (d, f, more = '') => `<path d="${d}" fill="${f}" ${more}/>`;
   const L = (d, s, w = 2, more = '') => `<path d="${d}" fill="none" stroke="${s}" stroke-width="${w}" stroke-linecap="round" ${more}/>`;
+  const T = (x, y, text, size, f) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}" fill="${f}" style="font-family: var(--f-display)">${text}</text>`;
   const each = (n, f) => Array.from({ length: n }, (_, i) => f(i)).join('');
   const SKY = (f) => R(0, 0, 400, 220, f);
   const SUN = C(338, 46, 24, '#ffd34d') + E(90, 40, 34, 12, '#fff', 'opacity=".8"') + E(130, 32, 24, 10, '#fff', 'opacity=".8"');
@@ -549,6 +572,26 @@ window.Art = (() => {
     space: () => SKY('#0b1230') + STARS(46, 5) + C(80, 196, 80, '#3f8fd0') +
       P('M30 150 C50 136 70 150 64 166 C56 180 34 176 30 150 Z M100 140 C120 130 136 146 126 160 C116 170 104 160 100 140 Z', '#5fae6a') +
       L('M20 180 q30 -10 60 0', '#fff', 3, 'opacity=".6"') + C(332, 50, 16, '#e9c46a') + E(332, 50, 28, 7, 'none', 'stroke="#d9b45a" stroke-width="3"'),
+
+    // ── 현대 · 치킨 엔딩 ──
+    hatchery: () => SKY('#f6e3d3') + R(0, 0, 400, 10, '#e8cdb6') +
+      [12, 268].map((x) => R(x, 36, 120, 150, '#cfd8dc', 'rx="8"') + R(x + 8, 18, 104, 22, '#26344a', 'rx="4"') +
+        T(x + 60, 35, '37.5℃', 14, '#ff6b5a') +
+        each(4, (k) => R(x + 8, 46 + k * 34, 104, 28, '#eef2f5', 'rx="4" stroke="#9aa5ad" stroke-width="2"') +
+          each(5, (j) => E(x + 20 + j * 20, 60 + k * 34, 6, 8, '#fff6e6', 'stroke="#d9cdb6" stroke-width="1.5"')))).join('') +
+      P('M150 0 H250 L300 186 H100 Z', '#ffb38a', 'opacity=".18"') +
+      R(150, 28, 100, 66, '#fff6e6', 'rx="4" stroke="#d8402c" stroke-width="3"') +
+      T(200, 58, 'B*C치킨', 20, '#d8402c') + T(200, 80, '공식 납품 농장', 11, '#3b2f2a') +
+      R(0, 186, 400, 34, '#c9b48a'),
+
+    chickenshop: () => SKY('#2a2f45') + STARS(14, 9, 40) +
+      R(26, 44, 348, 158, '#f6e9d8') +
+      each(10, (i) => P(`M${30 + i * 34} 64 h34 v12 q-17 12 -34 0 Z`, i % 2 ? '#fff6e6' : '#d8402c')) +
+      R(104, 8, 192, 40, '#d8402c', 'rx="8" stroke="#3b2f2a" stroke-width="3"') + T(200, 37, 'B*C치킨', 24, '#fff6e6') +
+      R(42, 96, 100, 74, '#3b2f2a', 'rx="6"') + T(92, 118, '후라이드', 14, '#fff6e6') + T(92, 138, '양념', 14, '#ffb38a') + T(92, 158, '반반', 14, '#ffe27a') +
+      R(262, 104, 96, 60, '#9aa5ad', 'rx="6"') + R(270, 112, 80, 30, '#ffb84d', 'opacity=".85"') +
+      L('M284 104 V86 M336 104 V86', '#6b7780', 4) + L('M296 108 q4 -8 0 -16 M318 108 q4 -8 0 -16', '#fff', 2, 'opacity=".7"') +
+      R(26, 178, 348, 24, '#8b5a3c') + R(0, 202, 400, 18, '#3a3f55'),
   };
 
   function scene(bg) {
@@ -556,5 +599,5 @@ window.Art = (() => {
     return `<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw()}</svg>`;
   }
 
-  return { egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]) };
+  return { egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]), sceneKeys: () => Object.keys(SCENES) };
 })();

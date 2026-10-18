@@ -1,6 +1,6 @@
 // 계란이의 모험 v3 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '3.0',
+  version: '3.1',
 
   // 가방에 들어가는 아이템. shield: 금이 갈 충격을 한 번 막는다 (short는 상단 표시, block은 막았을 때 문장)
   items: {
@@ -63,6 +63,7 @@ window.META = {
     { id: 'party', name: '생일 고깔', desc: '친구들과의 생일잔치를 기념해요.', shell: '#fff6e6', hat: 'party', unlock: { ending: 'e_party' } },
     { id: 'stamp', name: '1등급 계란', desc: '빨간 1등급 도장이 쾅!', shell: '#fff6e6', pattern: 'stamp', unlock: { ending: 'e_factory' } },
     { id: 'vlog', name: '브이로거', desc: '거꾸로 쓴 모자가 트레이드마크.', shell: '#fff6e6', hat: 'cap', unlock: { ending: 'e_vlog' } },
+    { id: 'crispy', name: '바삭 치킨', desc: '황금빛 튀김옷을 입었어요. 겉은 바삭, 속은 촉촉.', shell: '#e3a04c', pattern: 'crispy', unlock: { ending: 'e_chicken' } },
     { id: 'gold', name: '황금알', desc: '현대 이야기의 진엔딩을 본 계란에게 주어지는 반짝이는 껍질.', shell: '#ffd34d', pattern: 'shine', unlock: { ending: 'e_hatch' } },
     { id: 'jade', name: '비취알', desc: '닭의 숲에서 깨어난 계란의 푸른 껍질.', shell: '#9fd3b5', pattern: 'shine', unlock: { ending: 'e_g_hatch' } },
     { id: 'gaya', name: '금관', desc: '일곱째 가야의 왕이 쓰던 작은 금관.', shell: '#fff6e6', hat: 'goldcrown', unlock: { ending: 'e_g_king' } },
@@ -84,6 +85,8 @@ window.META = {
     '45c42b6afd97b67c396817dedfbfb5a2409b06a98b95c4e68101b627f28a0cf7',
     '157fb2db64ea03c6354a5af3febcc7d48be75a73863385b8f5c9de9c09212806',
     '0fb796c775ff6016ae8ab23da77dcf7ac12ef11389717e7dd20e3a491e80f6cb',
+    '899be75ddd7505b1852e53a9a64121e0169f49938f7a9611ce44a9efdd1afd4f',
+    'c0ac4e48f1b66bee8c22e87f8d851320711571d9cbb09ccab64f40a322c43442',
   ],
 
   // 크레딧. names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 (specsTitle이 표 제목)
@@ -92,7 +95,7 @@ window.META = {
     { role: 'QATEST', names: ['은율', '지우', "윤아"] },
     { role: '아이디어', names: ['지우'] },
     { role: '디자인', names: ['YDS','지우'] },
-    { role: '공동투자', names: ['YDS', 'TDS', 'TDSHQ', 'TDSNT', 'TDSHQ'] },
+    { role: '공동투자', names: ['YDS', 'TDS', 'TDSHQ', 'TDSNT'] },
     {
       role: '출연 · 현대',
       names: ['계란이', '노른자 할아버지', '쌍란 흰둥이', '로봇청소기 동글이', '고양이 나비', '비둘기 구구', '진돗개 백구', '허수아비', '장닭 대장 · 꼬순이', '족제비', '꼬꼬엄마', '도윤이', '할머니 · 할아버지', '가재 왕국 시민 서른 마리'],
@@ -108,5 +111,5 @@ window.META = {
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
     { role: '특별히 고마운 분', names: ['이번 작품을 준비한 은율입니다. 플레이 해주셔서 감사합니다.'] },
   ],
-  copyright: '© 2026 계란이의 모험 · v3.0',
+  copyright: '© 2026 계란이의 모험 · v3.1',
 };

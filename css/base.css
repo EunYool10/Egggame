@@ -247,6 +247,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .era-pill { justify-self: start; padding: 1px 10px; border: 2px solid var(--edge); border-radius: 99px; background: var(--era); color: var(--era-ink); font-size: 0.78rem; }
 .flag { padding: 0 8px; border-radius: 99px; background: var(--bg-2); color: var(--muted); font-size: 0.72rem; }
 .flag.done { background: var(--k-true); color: var(--paper); }
+.flag.rec { border: 1.5px solid var(--edge); background: var(--yolk-soft); color: var(--ink); }
 .story-title { font-family: var(--f-display); font-size: 1.45rem; line-height: 1.2; }
 .story-blurb { font-family: var(--f-story); font-size: 0.92rem; color: var(--muted); }
 .story-meta { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -267,6 +268,13 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .intro-text p:last-child { margin-bottom: 0; }
 .intro-goal { padding: 8px 12px; border-radius: var(--r-sm); background: var(--yolk-soft); font-size: 0.9rem; }
 .intro-goal b { margin-right: 6px; font-family: var(--f-display); font-weight: 400; }
+/* 도감에서 엔딩 다시 읽기 */
+.detail-kind { --k: var(--k-normal); margin: 0; font-size: 0.88rem; color: var(--muted); }
+.detail-kind[data-kind="true"] { --k: var(--k-true); }
+.detail-kind[data-kind="happy"] { --k: var(--k-happy); }
+.detail-kind[data-kind="hidden"] { --k: var(--k-hidden); }
+.detail-kind[data-kind="bad"] { --k: var(--k-bad); }
+.detail-kind .kd { padding: 0 10px; border: 2px solid var(--k); border-radius: 99px; color: var(--k); }
 .help-list { display: grid; gap: 8px; margin: 0; }
 .help-list div { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--bg-2); }
 .help-list dt { font-family: var(--f-display); }
@@ -374,6 +382,8 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .skin .cond { font-size: 0.72rem; color: var(--muted); }
 
 .settings { display: grid; gap: 12px; }
+.set-group { margin: 8px 0 -2px; font-family: var(--f-display); font-weight: 400; font-size: 1rem; color: var(--muted); }
+.set-group:first-child { margin-top: 0; }
 .set-row {
   display: grid;
   gap: 8px;

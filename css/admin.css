@@ -1,0 +1,86 @@
+/* ---------- 관리자 뷰어 (js/admin.js) ---------- */
+.admin-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.admin-tabs .tab { flex: 1 1 auto; padding: 6px 12px; font-family: var(--f-display); }
+.admin-tabs .tab[aria-selected="true"] { border-color: var(--k-hidden); background: var(--k-hidden); color: var(--paper); }
+.admin-panel { display: grid; gap: 14px; min-width: 0; }
+.admin-panel .hint { margin: 0; }
+.adm-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 2px solid var(--edge);
+  border-radius: var(--r);
+  background: var(--paper);
+  box-shadow: 0 3px 0 var(--drop);
+}
+.adm-card h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; }
+.adm-card h3 output { margin-left: 6px; color: var(--hot); font-variant-numeric: tabular-nums; }
+.adm-kv { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 6px 14px; margin: 0; }
+.adm-kv div { min-width: 0; }
+.adm-kv dt { font-size: 0.75rem; color: var(--muted); }
+.adm-kv dd { margin: 0; overflow-wrap: anywhere; }
+.admin-panel code { padding: 0 5px; border-radius: 4px; background: var(--bg-2); font-size: 0.78rem; color: var(--k-hidden); }
+.adm-range { width: 100%; accent-color: var(--hot); }
+.seg-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg-btns .btn.on, .adm-row .btn.on { border-color: var(--edge); background: var(--yolk); color: var(--yolk-ink); }
+.adm-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.adm-chip {
+  padding: 3px 12px;
+  border: 2px solid var(--line);
+  border-radius: 99px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.adm-chip.on { border-color: var(--edge); background: var(--good); color: var(--paper); }
+.adm-chip.other:not(.on) { opacity: 0.55; }
+.adm-story-tabs .tab small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* 장면 지도 */
+.adm-list { display: grid; gap: 8px; }
+.adm-item { border: 2px solid var(--line); border-radius: var(--r-sm); background: var(--paper); }
+.adm-item[open] { border-color: var(--edge); }
+.adm-item summary { padding: 10px 12px; cursor: pointer; font-family: var(--f-display); }
+.adm-item > :not(summary) { margin: 0 12px 12px; }
+.adm-ch { padding: 0 8px; border-radius: 99px; background: var(--bg-2); font-size: 0.8rem; }
+.adm-ok { padding: 0 8px; border-radius: 99px; background: var(--good); color: var(--paper); font-family: var(--f-ui); font-size: 0.72rem; }
+.adm-tag { display: inline-block; padding: 0 8px; border-radius: 99px; background: var(--bg-2); color: var(--muted); font-family: var(--f-ui); font-size: 0.75rem; }
+.adm-text { display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--bg-2); font-family: var(--f-story); font-size: 0.92rem; }
+.adm-text p { margin: 0; }
+.adm-text .cond { color: var(--muted); }
+.adm-choices { display: grid; gap: 8px; padding-left: 0; list-style: none; }
+.adm-choices li { display: grid; gap: 2px; }
+.adm-choices .peek { grid-column: auto; }
+.adm-outs { display: grid; gap: 6px; padding-left: 0; list-style: none; }
+
+/* 엔딩 */
+.adm-ends .book-card { align-items: start; }
+.adm-row { gap: 6px; margin-top: 6px; }
+
+/* 그림 */
+.adm-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.adm-gallery li { display: grid; justify-items: center; align-content: start; gap: 4px; padding: 10px 8px; border: 2px solid var(--line); border-radius: var(--r-sm); background: var(--paper); text-align: center; }
+.adm-gallery .egg { width: 64px; }
+.adm-gallery b { font-family: var(--f-display); font-weight: 400; }
+.adm-gallery small { font-size: 0.72rem; color: var(--muted); }
+.adm-gallery.bgs { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.adm-bg { position: relative; display: block; width: 100%; aspect-ratio: 16 / 8.5; border: 2px solid var(--edge); border-radius: var(--r-sm); overflow: hidden; }
+
+/* 미니게임 */
+.adm-games { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.adm-games li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 8px 12px; border-radius: var(--r-sm); background: var(--bg-2); }
+.adm-games b { font-family: var(--f-display); font-weight: 400; }
+.adm-games span { grid-column: 1; font-size: 0.82rem; color: var(--muted); }
+.adm-games .btn { grid-column: 2; grid-row: 1 / span 2; }
+
+/* 옵션 */
+.adm-opt { padding: 10px 0; border: 0; border-bottom: 2px dashed var(--line); border-radius: 0; box-shadow: none; }
+.adm-opt:last-child { border-bottom: 0; }
+.adm-json { font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; }
+
+@media (max-width: 420px) {
+  .adm-card { padding: 12px; }
+  .adm-gallery { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
