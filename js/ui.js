@@ -151,7 +151,9 @@ window.UI = (() => {
   const kindSeen = (kind) => endIds.filter((id) => S.endings[id].kind === kind && Store.book.endings[id]).length;
   function isUnlocked(skin) {
     const u = skin.unlock;
-    if (!u || window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
+    if (!u) return true;
+    if (u.admin) return Boolean(window.App.admin); // 운영진 전용 계란
+    if (window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
     if (u.ending) return Boolean(Store.book.endings[u.ending]);
     if (u.story) return storySeen(storyOf(u.story)) >= storyEnds(storyOf(u.story)).length;
     if (u.kind) return kindSeen(u.kind) >= u.n;
@@ -159,7 +161,10 @@ window.UI = (() => {
     if (u.count) return seenCount() >= u.count;
     return false;
   }
-  const unlockedSkins = () => M.skins.filter(isUnlocked);
+  // 운영진 전용 계란은 관리자 계정(관리자 권한을 켠 상태)에만 보이고, 일반 플레이어의 개수 세기에서도 빠진다.
+  const staffOnly = (skin) => Boolean(skin.unlock && skin.unlock.admin);
+  const visibleSkins = () => M.skins.filter((k) => !staffOnly(k) || window.App.admin);
+  const unlockedSkins = () => visibleSkins().filter(isUnlocked);
   function currentSkin() {
     const skin = M.skins.find((k) => k.id === Store.settings.skin);
     return skin && isUnlocked(skin) ? skin : M.skins[0];
@@ -167,6 +172,7 @@ window.UI = (() => {
   function condText(skin) {
     const u = skin.unlock;
     if (!u) return '처음부터 있어요';
+    if (u.admin) return '운영진 계정 전용';
     if (u.ending) {
       const no = endingNo(u.ending);
       return `${no.story.era} 엔딩 ${pad(no.n)} 발견하기`;
@@ -179,10 +185,11 @@ window.UI = (() => {
     if (u.count === 'all') return `모든 엔딩 발견하기 (${seenCount()}/${endIds.length})`;
     return `엔딩 ${u.count}개 발견하기 (${Math.min(seenCount(), u.count)}/${u.count})`;
   }
-  // 옷장 묶음: 처음부터 · 이야기별 엔딩 · 모으기 보상
+  // 옷장 묶음: 운영진 전용 · 처음부터 · 이야기별 엔딩 · 모으기 보상
   function skinGroup(skin) {
     const u = skin.unlock;
     if (!u) return 'base';
+    if (u.admin) return 'staff';
     if (u.ending && S.endings[u.ending]) return S.endings[u.ending].story;
     return 'reward';
   }
@@ -236,7 +243,7 @@ window.UI = (() => {
     }
     $('btnNew').classList.toggle('soft', Boolean(scene));
     $('bookTile').textContent = `${seenCount()} / ${endIds.length}`;
-    $('closetTile').textContent = `${unlockedSkins().length} / ${M.skins.length}`;
+    $('closetTile').textContent = `${unlockedSkins().length} / ${visibleSkins().length}`;
     $('titleFoot').textContent = `${M.byline} · v${M.version}`;
   }
 
@@ -347,7 +354,7 @@ window.UI = (() => {
     $('closetEgg').innerHTML = Art.egg(cur, { mood: 'happy', label: cur.name });
     $('closetName').textContent = cur.name;
     $('closetDesc').textContent = cur.desc;
-    $('closetCount').textContent = `${unlockedSkins().length} / ${M.skins.length}개 모음 · 엔딩을 볼수록 늘어나요`;
+    $('closetCount').textContent = `${unlockedSkins().length} / ${visibleSkins().length}개 모음 · 엔딩을 볼수록 늘어나요`;
     const cell = (sk) => {
       const open = isUnlocked(sk);
       const on = sk.id === cur.id;
@@ -356,9 +363,9 @@ window.UI = (() => {
         `<span>${open ? esc(sk.name) : '???'}</span>` +
         `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : esc(condText(sk))}</span></button></li>`;
     };
-    const groups = [['base', '처음부터 있는 계란'], ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`]), ['reward', '모으기 보상']];
+    const groups = [['staff', '운영진 전용'], ['base', '처음부터 있는 계란'], ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`]), ['reward', '모으기 보상']];
     $('skinGrid').innerHTML = groups.map(([g, name]) => {
-      const list = M.skins.filter((sk) => skinGroup(sk) === g);
+      const list = visibleSkins().filter((sk) => skinGroup(sk) === g);
       if (!list.length) return '';
       return `<section class="skin-group" data-era="${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
         `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`;
@@ -476,7 +483,7 @@ window.UI = (() => {
     get modalOpen() { return !$('modal').hidden; },
     set bookTab(id) { if (S.byId[id]) bookTab = id; },
     show, back, toast, modal, closeModal, confirmBox, trapFocus, applySettings, reduceMotion, help, storyCard,
-    isUnlocked, unlockedSkins, currentSkin, endingArt, seenCount, storyOf, storyLabel, endingNo, runStory,
+    isUnlocked, unlockedSkins, visibleSkins, currentSkin, endingArt, seenCount, storyOf, storyLabel, endingNo, runStory,
     condText, endingDetail,
   };
 })();

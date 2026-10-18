@@ -158,6 +158,17 @@ window.Art = (() => {
     gem: () => '<path d="M60 6 L30 40 L60 70 Z M60 6 L90 40 L60 70 Z" fill="#ffffff" opacity=".25"/>' +
       '<path d="M60 6 L30 40 L60 70 L90 40 Z M30 40 L8 88 L60 70 M90 40 L112 88 L60 70 M8 88 L60 136 L60 70 M112 88 L60 136" fill="none" stroke="#ffffff" stroke-width="2" opacity=".75"/>' +
       spark(84, 30, 7, '#ffffff', 0.95),
+    // ── 운영진 전용 ──
+    // 운영진: 위쪽을 가로지르는 보라 어깨띠와 금별 (얼굴을 가리지 않게 위에 둔다)
+    sash: () => '<g transform="rotate(-18 60 42)"><rect x="-20" y="30" width="160" height="24" fill="#6f4bb0"/>' +
+      '<rect x="-20" y="30" width="160" height="3" fill="#ffd34d"/><rect x="-20" y="51" width="160" height="3" fill="#ffd34d"/>' +
+      '<text x="58" y="48" text-anchor="middle" font-size="13" fill="#fff6e6" style="font-family: var(--f-display)">운영진</text></g>' +
+      spark(94, 22, 8, '#ffd34d', 1),
+    // 개발자: 코드 기호와 0·1
+    code: () => '<text x="32" y="46" font-size="18" font-weight="700" font-family="ui-monospace, Consolas, monospace" fill="#2f9a62">&lt;/&gt;</text>' +
+      [[18, 66, '0101'], [70, 28, '10'], [20, 122, '110'], [72, 124, '0110']].map(([x, y, t]) =>
+        `<text x="${x}" y="${y}" font-size="9" font-family="ui-monospace, Consolas, monospace" fill="#2f9a62" opacity=".55">${t}</text>`).join('') +
+      '<path d="M90 48 l8 8 l-8 8" fill="none" stroke="#2f9a62" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>',
   };
 
   // 모자는 계란 꼭대기(y=6)에 맞춰 그렸다. 병아리 머리에는 아래로 옮겨 씌운다.
@@ -215,6 +226,12 @@ window.Art = (() => {
       '<path d="M44 6 L48 20 M66 4 L64 20 M88 10 L82 20" stroke="#4f8a3d" stroke-width="2" stroke-linecap="round"/>',
     comb:
       '<path class="ink" d="M38 14 C32 0 42 -8 48 0 C48 -14 62 -16 64 -2 C68 -14 82 -10 80 2 C88 0 90 12 82 14 Z" fill="#e0392b"/>',
+    // 운영진 왕관: 보라 보석이 박힌 황금 왕관
+    gmcrown:
+      '<path class="ink" d="M30 20 L33 -6 L46 8 L60 -16 L74 8 L87 -6 L90 20 Z" fill="#ffd34d"/>' +
+      '<path class="ln thin" d="M32 14 H88"/>' +
+      '<circle class="ink" cx="60" cy="7" r="5.5" fill="#9b6ff0"/><circle class="ink" cx="43" cy="12" r="3.2" fill="#e05a47"/><circle class="ink" cx="77" cy="12" r="3.2" fill="#3f8fd0"/>' +
+      dots([[33, -6, 3], [60, -16, 3.4], [87, -6, 3]], '#fff6e6', 1),
   };
   const FACE_HATS = ['glasses', 'ring']; // 꼭대기가 아닌 곳에 그리는 것 (병아리도 머리털을 그대로 둔다)
   const HAT_DY = { glasses: -18, ring: -12 }; // 병아리에게 씌울 때 위아래로 옮기는 값 (나머지는 30)

@@ -163,7 +163,7 @@ window.Admin = (() => {
     return card('플레이 기록', kv([
       ['플레이', `${st.plays}번`], ['엔딩 본 횟수', `${st.finished}번`], ['와장창', `${st.crashes}번`],
       ['고른 선택지', `${st.choices}개`], ['최단 진엔딩', st.bestTrue == null ? '-' : `선택 ${st.bestTrue}번`],
-      ['스킨', `${UI.unlockedSkins().length}/${M.skins.length}`], ...per,
+      ['스킨', `${UI.unlockedSkins().length}/${UI.visibleSkins().length}`], ...per,
     ])) +
       card('한 번에 바꾸기', '<div class="row">' +
         '<button type="button" class="btn small" data-a="markAll">모든 엔딩 기록</button>' +

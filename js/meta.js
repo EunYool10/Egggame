@@ -1,6 +1,6 @@
 // 계란이의 모험 v3 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '3.2',
+  version: '3.3',
 
   // 가방에 들어가는 아이템. shield: 금이 갈 충격을 한 번 막는다 (short는 상단 표시, block은 막았을 때 문장)
   items: {
@@ -47,7 +47,7 @@ window.META = {
 
   // 계란 옷장: shell 껍질 색, pattern 무늬, hat 모자, unlock 해금 조건
   // unlock: null(처음부터) · { ending: 엔딩 id } · { count: 발견한 엔딩 수 또는 'all' }
-  //         { story: 이야기 id } (그 이야기 엔딩 모두) · { kind: 엔딩 종류, n: 개수 } (예: 배드 엔딩 10개)
+  //         { story: 이야기 id } (그 이야기 엔딩 모두) · { kind: 엔딩 종류, n: 개수 } (예: 배드 엔딩 10개) · { admin: true } (운영진 계정만)
   skins: [
     { id: 'white', name: '기본 계란', desc: '냉장고 출신의 평범한 흰 계란.', shell: '#fff6e6', unlock: null },
     { id: 'brown', name: '토종란', desc: '갈색 껍질이 단단해 보이는 시골 계란.', shell: '#e3b484', unlock: null },
@@ -111,6 +111,10 @@ window.META = {
     { id: 'silver', name: '은빛 알', desc: '엔딩 25개를 본 계란의 은빛 껍질.', shell: '#d8dde3', pattern: 'shine', unlock: { count: 25 } },
     { id: 'gem', name: '보석 알', desc: '엔딩 35개를 본 계란이 반짝반짝 깎은 보석 껍질.', shell: '#b5e3f5', pattern: 'gem', unlock: { count: 35 } },
     { id: 'rainbow', name: '무지개 알', desc: '세 시대의 엔딩을 모두 본 계란에게만.', shell: '#fff6e6', pattern: 'rainbow', unlock: { count: 'all' } },
+    // 운영진 전용: 관리자 계정에만 보이고, 일반 플레이어 옷장에는 나오지 않는다.
+    { id: 'staff', name: '운영진 계란', desc: '운영진만 입을 수 있는 보랏빛 계란. 어깨띠의 금별이 반짝여요.', shell: '#e3d6fc', pattern: 'sash', unlock: { admin: true } },
+    { id: 'gm', name: '운영진 왕관', desc: '계란이의 모험을 지키는 운영진의 황금 왕관.', shell: '#fff6e6', hat: 'gmcrown', unlock: { admin: true } },
+    { id: 'dev', name: '개발자 계란', desc: '버그를 잡는 운영진의 계란. 0과 1이 흘러요.', shell: '#d8f5e6', pattern: 'code', unlock: { admin: true } },
   ],
 
   byline: '은율 · 지우 · 윤아',// 타이틀 화면 아래에 보이는 한 줄
@@ -147,5 +151,5 @@ window.META = {
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
     { role: '특별히 고마운 분', names: ['이번 작품을 준비한 은율입니다. 플레이 해주셔서 감사합니다.'] },
   ],
-  copyright: '© 2026 계란이의 모험 · v3.2',
+  copyright: '© 2026 계란이의 모험 · v3.3',
 };
