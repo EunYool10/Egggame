@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// 계란이의 모험 — Firestore 보안 규칙 (Firebase 프로젝트 egggame-eunyool, (default) 데이터베이스, 서울 리전)
+// 계란이의 모험 v3 — Firestore 보안 규칙 (Firebase 프로젝트 egggame-eunyool, (default) 데이터베이스, 서울 리전)
 // 배포: firebase deploy --only firestore:rules (firebase.json, .firebaserc 참고)
 // 엔딩·장면·스킨을 추가하면 아래 endingIds / sceneIds / skinIds 목록도 함께 고쳐야 저장된다.
 //
@@ -12,8 +12,9 @@ rules_version = '2';
 // Document ID: the player's Firebase Auth uid (Google sign-in)
 // Fields:
 //   - book: map (required) - the player's ending book
-//       - endings: map<endingId, int> (required, known ending ids only, each 1..100000) - times each ending was seen
-//       - scenes: list<string> (required, <= 14 items, known scene ids only) - scenes visited at least once
+//       - endings: map<endingId, int> (required, known ending ids only) - times each ending was seen
+//         (counts are clamped to 1..100000 by the game when read, see isValidEndings)
+//       - scenes: list<string> (required, <= 60 items, known scene ids only) - scenes visited at least once
 //       - stats: map (required, all five keys)
 //           - plays, finished, crashes, choices: int (0..10,000,000)
 //           - bestTrue: int (1..1000) or null - fewest choices to the true ending
@@ -59,35 +60,36 @@ service cloud.firestore {
     }
 
     function endingIds() {
-      return ['e_hatch', 'e_party', 'e_helmet', 'e_late', 'e_school', 'e_easter', 'e_treasure', 'e_seoul',
-        'e_crayfish', 'e_jangjorim', 'e_omelet', 'e_baked', 'e_tteok', 'e_forest', 'e_crash'];
+      return ['e_hatch', 'e_twins', 'e_party', 'e_crayfish', 'e_helmet', 'e_late', 'e_school', 'e_easter',
+        'e_treasure', 'e_seoul', 'e_lucky', 'e_vlog', 'e_factory', 'e_jangjorim', 'e_omelet', 'e_baked',
+        'e_tteok', 'e_forest', 'e_sunfry', 'e_again', 'e_crash', 'e_g_hatch', 'e_g_party', 'e_g_king',
+        'e_g_museum', 'e_g_alji', 'e_g_crack', 'e_g_late', 'e_g_dragon', 'e_g_ayuta', 'e_g_song', 'e_g_baked',
+        'e_g_tiger', 'e_g_fox', 'e_g_crash', 'e_f_hatch', 'e_f_party', 'e_f_alien', 'e_f_helmet', 'e_f_late',
+        'e_f_robot', 'e_f_moon', 'e_f_saturn', 'e_f_omelet', 'e_f_engine', 'e_f_salad', 'e_f_trash', 'e_f_crash'];
     }
 
     function sceneIds() {
-      return ['start', 'elder', 'swap', 'kitchen', 'ondol', 'cat', 'basket', 'market', 'yard', 'dog', 'alley',
-        'stream', 'field', 'storm'];
+      return ['start', 'elder', 'swap', 'kitchen', 'living', 'ondol', 'cat', 'basket', 'roof', 'market',
+        'truck', 'yard', 'dog', 'alley', 'farm', 'stream', 'field', 'storm', 'collect', 'g_start', 'g_box',
+        'g_pine', 'g_kiln', 'g_smithy', 'g_port', 'g_river', 'g_pass', 'g_gyerim', 'g_frost', 'f_start',
+        'f_corridor', 'f_engine', 'f_garden', 'f_window', 'f_pod', 'f_mars', 'f_dust'];
     }
 
     function skinIds() {
       return ['white', 'brown', 'quail', 'blue', 'easter', 'jangjorim', 'baked', 'tteok', 'bandage', 'helmet',
-        'crown', 'beret', 'party', 'gold', 'dino'];
+        'crown', 'beret', 'party', 'stamp', 'vlog', 'gold', 'jade', 'gaya', 'clay', 'pearl', 'mars', 'moon',
+        'alien', 'robot', 'dino', 'rainbow'];
     }
 
-    // An ending count, if present, is a whole number between 1 and 100000.
-    function isCount(m, k) {
-      return !(k in m) || (m[k] is int && m[k] >= 1 && m[k] <= 100000);
-    }
-
+    // Only the ending ids are checked. Checking all 48 counts one by one passes the
+    // 1000-expressions-per-request limit, and a bad count can only be in the player's own save:
+    // the game clamps every count to 1..100000 when it reads the save (js/account.js fromCloud).
     function isValidEndings(m) {
-      return m is map && m.keys().hasOnly(endingIds()) &&
-        isCount(m, 'e_hatch') && isCount(m, 'e_party') && isCount(m, 'e_helmet') && isCount(m, 'e_late') &&
-        isCount(m, 'e_school') && isCount(m, 'e_easter') && isCount(m, 'e_treasure') && isCount(m, 'e_seoul') &&
-        isCount(m, 'e_crayfish') && isCount(m, 'e_jangjorim') && isCount(m, 'e_omelet') && isCount(m, 'e_baked') &&
-        isCount(m, 'e_tteok') && isCount(m, 'e_forest') && isCount(m, 'e_crash');
+      return m is map && m.keys().hasOnly(endingIds());
     }
 
     function isValidScenes(l) {
-      return l is list && l.size() <= 14 && l.hasOnly(sceneIds());
+      return l is list && l.size() <= 60 && l.hasOnly(sceneIds());
     }
 
     function isStat(m, k) {

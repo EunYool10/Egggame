@@ -1,4 +1,4 @@
-// 계란이의 모험 v2 — 화면 전환, 창·알림, 타이틀, 엔딩 도감, 계란 옷장, 설정, 크레딧
+// 계란이의 모험 v3 — 화면 전환, 창·알림, 타이틀, 이야기 고르기, 엔딩 도감, 계란 옷장, 설정, 크레딧, 플레이 방법
 window.App = window.App || {};
 window.UI = (() => {
   'use strict';
@@ -13,19 +13,33 @@ window.UI = (() => {
   const pad = (n) => String(n).padStart(2, '0');
   const KIND = { true: '진엔딩', happy: '해피 엔딩', normal: '노멀 엔딩', hidden: '히든 엔딩', bad: '배드 엔딩' };
   const endIds = Object.keys(S.endings);
-  const SCREENS = ['title', 'play', 'end', 'book', 'closet', 'settings', 'credits'];
-  const PAGES = ['book', 'closet', 'settings', 'credits'];
+  const SCREENS = ['title', 'stories', 'play', 'end', 'book', 'closet', 'settings', 'credits'];
+  const PAGES = ['stories', 'book', 'closet', 'settings', 'credits'];
   const root = document.documentElement;
   const hostTheme = root.dataset.theme; // 뷰어가 정해 둔 테마는 '기기 설정'일 때 되돌린다
   let current = 'title';
   let backTo = 'title';
+  let bookTab = S.stories[0].id;
 
   const reduceMotion = () => Store.settings.motion === 'reduce' || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const seenCount = () => endIds.filter((id) => Store.book.endings[id]).length;
   const stat = (dt, dd) => `<div><dt>${dt}</dt><dd>${dd}</dd></div>`;
 
+  // ---------- 이야기 ----------
+  const storyOf = (id) => S.byId[id] || S.stories[0];
+  const storyLabel = (s) => `이야기 ${s.no} · ${s.era}`;
+  const storyEnds = (s) => endIds.filter((id) => S.endings[id].story === s.id);
+  const storySeen = (s) => storyEnds(s).filter((id) => Store.book.endings[id]).length;
+  // 엔딩 번호는 이야기마다 따로 센다.
+  function endingNo(id) {
+    const e = S.endings[id];
+    const list = storyEnds(storyOf(e && e.story));
+    return { story: storyOf(e && e.story), n: list.indexOf(id) + 1, total: list.length };
+  }
+  const runStory = (run) => (run && (run.story || (S.scenes[run.node] && S.scenes[run.node].story))) || S.stories[0].id;
+
   // ---------- 화면 ----------
-  const RENDER = { title: renderTitle, book: renderBook, closet: renderCloset, settings: renderSettings, credits: renderCredits };
+  const RENDER = { title: renderTitle, stories: renderStories, book: renderBook, closet: renderCloset, settings: renderSettings, credits: renderCredits };
 
   function show(id) {
     if (PAGES.includes(id) && !PAGES.includes(current)) backTo = current;
@@ -63,10 +77,11 @@ window.UI = (() => {
 
   let onModalClose = null;
   let lastFocus = null;
-  function modal({ title, body, actions = [{ label: '닫기' }], onClose = null }) {
+  function modal({ title, body, actions = [{ label: '닫기' }], onClose = null, wide = false }) {
     lastFocus = document.activeElement;
     $('modalTitle').textContent = title;
     $('modalBody').innerHTML = body;
+    $('modal').querySelector('.sheet').classList.toggle('wide', wide);
     const box = $('modalActions');
     box.innerHTML = '';
     actions.forEach((a) => {
@@ -88,8 +103,8 @@ window.UI = (() => {
     $('modal').hidden = true;
     const after = onModalClose;
     onModalClose = null;
-    if (after) after();
     if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus();
+    if (after) after();
   }
   const confirmBox = ({ title, text, ok, danger, run }) => modal({
     title,
@@ -100,7 +115,7 @@ window.UI = (() => {
 
   // 창이 열려 있을 때 Tab 키가 창 밖으로 나가지 않게 한다.
   function trapFocus(ev, box) {
-    const items = [...box.querySelectorAll('button, [href], input, summary, [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled && el.offsetParent);
+    const items = [...box.querySelectorAll('button, [href], input, select, summary, [tabindex]:not([tabindex="-1"])')].filter((el) => !el.disabled && el.offsetParent);
     if (!items.length) return;
     const first = items[0];
     const last = items[items.length - 1];
@@ -108,11 +123,33 @@ window.UI = (() => {
     else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
   }
 
+  // ---------- 플레이 방법 ----------
+  const HELP = [
+    ['고르기', '글을 읽고 A·B·C 가운데 하나를 골라요. 키보드로는 A·B·C나 1·2·3을 눌러요.'],
+    ['온기', '계란이는 차가워요. 둥지에 닿기 전에 몸을 20℃ 넘게 데워 두면, 마지막 밤을 버티기 쉬워요.'],
+    ['껍질', '금이 세 개 가면 와장창! 버터·갑옷·테이프 같은 보호 아이템은 충격을 한 번 막아 줘요.'],
+    ['가방과 친구', '아이템이나 친구가 있으면 선택지에 초록 표시가 붙고, 결과가 달라져요. 친구가 셋 넘으면 특별한 일도 생겨요.'],
+    ['미니게임', '왔다 갔다 하는 계란이를 노란 칸에서 멈추세요. 설정에서 난이도를 바꿀 수 있어요.'],
+    ['이야기와 엔딩', '현대·고대·미래, 이야기마다 길과 결말이 달라요. 본 엔딩은 도감에 모이고, 계란 옷장 스킨이 열려요.'],
+  ];
+  function help(after) {
+    modal({
+      title: '플레이 방법',
+      body: `<dl class="help-list">${HELP.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`,
+      actions: [{ label: after ? '알겠어요, 시작할게요' : '닫기', primary: Boolean(after) }],
+      onClose: () => {
+        Store.set('seenHelp', true);
+        if (after) after();
+      },
+    });
+  }
+
   // ---------- 스킨 ----------
   function isUnlocked(skin) {
     const u = skin.unlock;
     if (!u || window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
     if (u.ending) return Boolean(Store.book.endings[u.ending]);
+    if (u.count === 'all') return seenCount() >= endIds.length;
     if (u.count) return seenCount() >= u.count;
     return false;
   }
@@ -124,65 +161,139 @@ window.UI = (() => {
   function condText(skin) {
     const u = skin.unlock;
     if (!u) return '처음부터 있어요';
-    if (u.ending) return `엔딩 ${pad(endIds.indexOf(u.ending) + 1)} 발견하기`;
+    if (u.ending) {
+      const no = endingNo(u.ending);
+      return `${no.story.era} 엔딩 ${pad(no.n)} 발견하기`;
+    }
+    if (u.count === 'all') return '모든 엔딩 발견하기';
     return `엔딩 ${u.count}개 발견하기`;
   }
-  function endingArt(e, skin, label) {
-    if (e.art === 'chick') return Art.chick(skin, { hat: e.hat, label });
-    return Art.egg(skin, { mood: e.art, hat: e.hat, label });
-  }
+  const endingArt = (e, label) => Art.ending(e.look, label || e.title);
 
   // ---------- 타이틀 ----------
+  const ICONS = {
+    book: '<path d="M4 6 C8 4 12 4 16 6 V26 C12 24 8 24 4 26 Z M16 6 C20 4 24 4 28 6 V26 C24 24 20 24 16 26"/>',
+    closet: '<path d="M16 6 a3 3 0 1 1 3 3 c-2 0 -3 1 -3 3 L4 22 H28 L16 12"/><path d="M6 22 V26 H26 V22"/>',
+    help: '<circle cx="16" cy="16" r="12"/><path d="M12 12 a4 4 0 1 1 6 3.5 c-1.5 1 -2 2 -2 3.5"/><circle cx="16" cy="23" r="0.8"/>',
+    credits: '<path d="M16 4 l3.5 7.5 8 1 -6 5.5 1.6 8 -7.1 -4 -7.1 4 1.6 -8 -6 -5.5 8 -1 Z"/>',
+  };
+  const icon = (k) => `<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${ICONS[k]}</svg>`;
+  $('btnBook').insertAdjacentHTML('afterbegin', icon('book'));
+  $('btnCloset').insertAdjacentHTML('afterbegin', icon('closet'));
+  $('btnHelp').insertAdjacentHTML('afterbegin', icon('help'));
+  $('btnCredits').insertAdjacentHTML('afterbegin', icon('credits'));
+
   function renderTitle() {
     const skin = currentSkin();
-    $('titleBackdrop').innerHTML = Art.scene('fridge');
+    $('titleBackdrop').innerHTML = S.stories.map((s, i) => `<div class="backdrop era-${s.id}" style="--i:${i}">${Art.scene(s.bg)}</div>`).join('');
+    $('titleBackdrop').style.setProperty('--n', S.stories.length);
     $('titleEgg').innerHTML = Art.egg(skin, { mood: 'happy', label: `${skin.name}를 입은 계란이` });
     const run = Store.loadRun();
     const scene = run && S.scenes[run.node];
     $('btnContinue').hidden = !scene;
     $('btnAdmin').hidden = !window.App.admin;
-    if (scene) $('continueInfo').textContent = `${scene.ch}장 · ${scene.place} · 선택 ${run.steps}번째`;
-    $('titleFoot').textContent = `${M.byline} · 엔딩 ${seenCount()} / ${endIds.length} · 옷장 ${unlockedSkins().length} / ${M.skins.length} · v${M.version}`;
+    if (scene) {
+      const s = storyOf(runStory(run));
+      $('continueInfo').textContent = `${storyLabel(s)} · ${scene.ch}장 ${scene.place}`;
+    }
+    $('btnNew').classList.toggle('soft', Boolean(scene));
+    $('bookTile').textContent = `${seenCount()} / ${endIds.length}`;
+    $('closetTile').textContent = `${unlockedSkins().length} / ${M.skins.length}`;
+    $('titleFoot').textContent = `${M.byline} · v${M.version}`;
+  }
+
+  // ---------- 이야기 고르기 ----------
+  function renderStories() {
+    const skin = currentSkin();
+    const run = Store.loadRun();
+    const runId = run && S.scenes[run.node] ? runStory(run) : null;
+    $('storyList').innerHTML = S.stories.map((s) => {
+      const seen = storySeen(s);
+      const total = storyEnds(s).length;
+      const done = Boolean(Store.book.endings[Object.keys(s.endings).find((id) => s.endings[id].kind === 'true')]);
+      return `<li><button type="button" class="story-card" data-story="${s.id}" data-era="${s.id}">` +
+        `<span class="story-art" aria-hidden="true"><span class="backdrop">${Art.scene(s.bg)}</span><span class="egg">${Art.egg(skin, { mood: 'brave' })}</span></span>` +
+        '<span class="story-info">' +
+        `<span class="row"><span class="era-pill">${esc(storyLabel(s))}</span>${runId === s.id ? '<span class="flag">이어하는 중</span>' : ''}${done ? '<span class="flag done">진엔딩 달성</span>' : ''}</span>` +
+        `<span class="story-title">${esc(s.title)}</span>` +
+        `<span class="story-blurb">${esc(s.blurb)}</span>` +
+        `<span class="story-meta"><span class="mini-bar"><i style="width:${(seen / total) * 100}%"></i></span>엔딩 ${seen} / ${total}</span>` +
+        '</span></button></li>';
+    }).join('');
+  }
+  $('storyList').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-story]');
+    if (b && window.App.pickStory) window.App.pickStory(b.dataset.story);
+  });
+
+  // 이야기 시작 카드. 바깥을 누르거나 Esc로 닫으면 시작하지 않고 이야기 고르기로 돌아간다.
+  function storyCard(s, start) {
+    const skin = currentSkin();
+    modal({
+      title: s.title,
+      wide: true,
+      body: `<div class="intro-art" data-era="${s.id}"><span class="backdrop" aria-hidden="true">${Art.scene(s.bg)}</span>` +
+        `<span class="egg" aria-hidden="true">${Art.egg(skin, { mood: 'brave' })}</span>` +
+        `<span class="era-pill">${esc(storyLabel(s))}</span></div>` +
+        `<div class="intro-text">${s.intro.map((p) => `<p>${esc(p)}</p>`).join('')}</div>` +
+        `<p class="intro-goal"><b>목표</b> ${esc(s.goal)}</p>`,
+      actions: [{ label: '다른 이야기' }, { label: '모험 시작!', primary: true, run: start }],
+    });
   }
 
   // ---------- 엔딩 도감 ----------
   function renderBook() {
     const book = Store.book;
-    const got = seenCount();
-    const sceneIds = Object.keys(S.scenes).filter((id) => !S.scenes[id].branch);
+    const s = storyOf(bookTab);
+    const ids = storyEnds(s);
+    const got = storySeen(s);
+    $('bookTabs').innerHTML = S.stories.map((t) =>
+      `<button type="button" class="tab" role="tab" data-tab="${t.id}" data-era="${t.id}" aria-selected="${t.id === s.id}">` +
+      `<b>${esc(t.era)}</b><small>${storySeen(t)} / ${storyEnds(t).length}</small></button>`).join('');
+    $('book').dataset.era = s.id;
+    $('bookFill').style.width = (got / ids.length) * 100 + '%';
+    $('bookCount').textContent = `${got} / ${ids.length}`;
+    $('bookTitle').textContent = `${storyLabel(s)} 「${s.title}」`;
+    const sceneIds = Object.keys(S.scenes).filter((id) => !S.scenes[id].branch && S.scenes[id].story === s.id);
     const st = book.stats;
-    $('bookFill').style.width = (got / endIds.length) * 100 + '%';
-    $('bookCount').textContent = `${got} / ${endIds.length}`;
     $('bookStats').innerHTML =
+      stat('전체 엔딩', `${seenCount()}/${endIds.length}`) +
+      stat('이 이야기 장면', `${sceneIds.filter((id) => book.scenes[id]).length}/${sceneIds.length}`) +
       stat('플레이', `${st.plays}번`) +
-      stat('엔딩 본 횟수', `${st.finished}번`) +
       stat('와장창', `${st.crashes}번`) +
-      stat('발견한 장면', `${sceneIds.filter((id) => book.scenes[id]).length}/${sceneIds.length}`) +
       stat('최단 진엔딩', st.bestTrue == null ? '-' : `선택 ${st.bestTrue}번`);
-    const skin = currentSkin();
-    $('bookGrid').innerHTML = endIds.map((id, i) => {
+    $('bookGrid').innerHTML = ids.map((id, i) => {
       const e = S.endings[id];
       const rec = book.endings[id];
-      const thumb = `<span class="thumb egg">${endingArt(e, skin, rec ? e.title : '아직 못 본 엔딩')}</span>`;
       if (!rec && window.App.admin) {
-        return `<li class="book-card peek" data-kind="${e.kind}">${thumb}` +
-          `<span><span class="no">엔딩 ${pad(i + 1)} · 아직 안 봄</span><span class="nm">${esc(e.title)}</span></span>` +
-          `<span class="kd">${KIND[e.kind]} · 관리자 열람</span></li>`;
+        return `<li class="book-card peek" data-kind="${e.kind}"><span class="thumb egg">${endingArt(e)}</span>` +
+          `<span class="meta"><span class="no">엔딩 ${pad(i + 1)} · 아직 안 봄</span><span class="nm">${esc(e.title)}</span>` +
+          `<span class="kd">${KIND[e.kind]} · 관리자 열람</span></span></li>`;
       }
       if (!rec) {
-        return `<li class="book-card">${thumb}<span><span class="no">엔딩 ${pad(i + 1)}</span><span class="nm">???</span></span>` +
-          `<button type="button" class="hint-btn" data-hint="${id}">힌트 보기</button></li>`;
+        return `<li class="book-card"><span class="thumb egg">${Art.mystery()}</span>` +
+          `<span class="meta"><span class="no">엔딩 ${pad(i + 1)}</span><span class="nm">???</span>` +
+          `<button type="button" class="hint-btn" data-hint="${id}">힌트 보기</button></span></li>`;
       }
-      return `<li class="book-card got" data-kind="${e.kind}">${thumb}` +
-        `<span><span class="no">엔딩 ${pad(i + 1)} · ${rec.n}번 봄</span><span class="nm">${esc(e.title)}</span></span>` +
-        `<span class="kd">${KIND[e.kind]}</span></li>`;
+      return `<li class="book-card got" data-kind="${e.kind}"><span class="thumb egg">${endingArt(e)}</span>` +
+        `<span class="meta"><span class="no">엔딩 ${pad(i + 1)} · ${rec.n}번 봄</span><span class="nm">${esc(e.title)}</span>` +
+        `<span class="kd">${KIND[e.kind]}</span></span></li>`;
     }).join('');
   }
+  $('bookTabs').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-tab]');
+    if (!b || b.dataset.tab === bookTab) return;
+    bookTab = b.dataset.tab;
+    Sound.play('tap');
+    renderBook();
+    const again = $('bookTabs').querySelector(`[data-tab="${bookTab}"]`);
+    if (again) again.focus();
+  });
   $('bookGrid').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-hint]');
     if (!b) return;
     Sound.play('tap');
-    const p = document.createElement('p');
+    const p = document.createElement('span');
     p.className = 'hint-text';
     p.textContent = '힌트: ' + S.endings[b.dataset.hint].hint;
     b.replaceWith(p);
@@ -199,7 +310,7 @@ window.UI = (() => {
       const open = isUnlocked(sk);
       const on = sk.id === cur.id;
       return `<li><button type="button" class="skin${open ? '' : ' locked'}${on ? ' on' : ''}" data-skin="${sk.id}" aria-pressed="${on}">` +
-        `<span class="egg">${Art.egg(sk, { mood: open ? 'calm' : 'sleepy', label: open ? sk.name : '잠긴 스킨' })}</span>` +
+        `<span class="egg">${open ? Art.egg(sk, { mood: 'calm', label: sk.name }) : Art.mystery('잠긴 스킨')}</span>` +
         `<span>${open ? esc(sk.name) : '???'}</span>` +
         `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : esc(condText(sk))}</span></button></li>`;
     }).join('');
@@ -308,7 +419,8 @@ window.UI = (() => {
     KIND, esc, pad, endIds,
     get current() { return current; },
     get modalOpen() { return !$('modal').hidden; },
-    show, back, toast, modal, closeModal, confirmBox, trapFocus, applySettings, reduceMotion,
-    isUnlocked, unlockedSkins, currentSkin, endingArt, seenCount,
+    set bookTab(id) { if (S.byId[id]) bookTab = id; },
+    show, back, toast, modal, closeModal, confirmBox, trapFocus, applySettings, reduceMotion, help, storyCard,
+    isUnlocked, unlockedSkins, currentSkin, endingArt, seenCount, storyOf, storyLabel, endingNo, runStory,
   };
 })();

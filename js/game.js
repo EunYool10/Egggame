@@ -1,4 +1,4 @@
-// 계란이의 모험 v2 — 게임 진행 (장면, 선택, 아이템·친구, 미니게임, 엔딩, 저장, 입력)
+// 계란이의 모험 v3 — 게임 진행 (이야기 고르기, 장면, 선택, 아이템·친구, 미니게임, 엔딩, 저장, 입력)
 (() => {
   'use strict';
 
@@ -9,19 +9,13 @@
   const Sound = window.Sound;
   const UI = window.UI;
   const $ = (id) => document.getElementById(id);
-  const { esc, pad, KIND, endIds } = UI;
+  const { esc, pad, KIND } = UI;
 
-  const START_TEMP = 4; // 냉장고 안 온도
   const READY_TEMP = 20; // 둥지 도착 전 목표 (온기 막대의 눈금)
   const MAX_TEMP = 37.5; // 부화 온도 (온기 막대의 끝)
   const MAX_CRACK = 3; // 금이 이만큼 가면 와장창
   const LETTERS = ['A', 'B', 'C'];
   const SPEED = { slow: [1, 45], normal: [2, 24], fast: [4, 16] }; // [한 번에 찍는 글자 수, 간격 ms]
-  const ENDING_BG = {
-    e_hatch: 'field', e_party: 'field', e_helmet: 'field', e_late: 'field', e_school: 'room', e_easter: 'market',
-    e_treasure: 'yard', e_seoul: 'alley', e_crayfish: 'stream', e_jangjorim: 'fridge', e_omelet: 'kitchen',
-    e_baked: 'room', e_tteok: 'market', e_forest: 'field',
-  };
 
   let st = fresh();
   let typing = null;
@@ -29,11 +23,42 @@
   let shownBg = null;
   let busy = false; // 미니게임이나 화면 전환 중에는 선택을 막는다
 
-  function fresh() {
-    return { node: S.first, t: START_TEMP, c: 0, steps: 0, bag: [], friends: [], say: null, notes: [], log: [], bg: 'fridge', hist: [] };
+  function fresh(storyId) {
+    const s = UI.storyOf(storyId);
+    return {
+      story: s.id, node: s.first, from: null, t: s.startTemp, c: 0, steps: 0, bag: [], friends: [], flags: [], vars: {},
+      say: null, notes: [], log: [], bg: s.bg, hist: [],
+    };
   }
+  const story = () => UI.storyOf(st.story);
   const nameOf = (id) => (M.items[id] || M.friends[id] || { name: id }).name;
   const skin = () => UI.currentSkin();
+  const shieldId = () => st.bag.find((id) => M.items[id] && M.items[id].shield);
+  // 받침이 있으면 '이', 없으면 '가'
+  const iga = (word) => {
+    const code = word.charCodeAt(word.length - 1) - 0xac00;
+    return word + (code >= 0 && code < 11172 && code % 28 ? '이' : '가');
+  };
+
+  // ---------- 조건과 본문 ----------
+  function meets(need) {
+    if (!need) return false;
+    if (Array.isArray(need)) return need.every(meets);
+    if (typeof need === 'string') return st.bag.includes(need) || st.friends.includes(need);
+    if (need.friends) return st.friends.length >= need.friends;
+    if (need.from) return [].concat(need.from).includes(st.from);
+    if (need.flag) return st.flags.includes(need.flag);
+    if (need.cracked) return st.c > 0;
+    return false;
+  }
+  function fill(text) {
+    const friends = st.friends.map(nameOf).join(', ') || '없음';
+    return text.replace('{friends}', '함께한 친구: ' + friends).replace(/\{mom\}/g, st.vars.mom || story().mom);
+  }
+  // 조건 문단은 조건이 맞을 때만 남긴다.
+  const lines = (list) => (list || [])
+    .filter((p) => typeof p === 'string' || ((!p.if || meets(p.if)) && (!p.not || !meets(p.not))))
+    .map((p) => fill(typeof p === 'string' ? p : p.text));
 
   // ---------- 상단 상태 ----------
   function hud() {
@@ -42,7 +67,12 @@
     document.querySelector('.hud').classList.toggle('warm', st.t >= READY_TEMP);
     $('cracks').innerHTML = Array.from({ length: MAX_CRACK }, (_, i) => `<i class="${i < st.c ? 'on' : ''}"></i>`).join('');
     $('cracks').setAttribute('aria-label', `껍질의 금 ${st.c}개, 최대 ${MAX_CRACK}개`);
-    $('shield').hidden = !st.bag.includes('butter');
+    const shield = shieldId();
+    $('shield').hidden = !shield;
+    if (shield) {
+      $('shield').textContent = M.items[shield].short;
+      $('shield').title = `${iga(M.items[shield].name)} 다음 충격을 막아 줘요`;
+    }
     $('bagCount').textContent = st.bag.length + st.friends.length;
   }
 
@@ -77,9 +107,12 @@
   // ---------- 장면 ----------
   function renderScene() {
     const sc = S.scenes[st.node];
+    const s = story();
     if (UI.current !== 'play') UI.show('play');
+    $('play').dataset.era = s.id;
     hud();
     $('chap').textContent = `${sc.ch}장`;
+    $('stageTag').textContent = `${s.era} · ${s.title}`;
     $('place').textContent = sc.place;
     if (shownBg !== sc.bg) {
       $('backdrop').innerHTML = Art.scene(sc.bg);
@@ -91,10 +124,11 @@
     setSay($('say'));
     floaters();
     $('btnUndo').disabled = !st.hist.length;
-    typeText(sc.text, () => renderChoices(sc));
+    typeText(lines(sc.text), (typed) => renderChoices(sc, typed));
   }
 
   // 글자가 한 자씩 나타난다. 남은 글자는 투명하게 미리 깔아 두어 줄바꿈이 흔들리지 않는다.
+  // done(typed): typed는 글자가 실제로 찍히는 동안 읽었는지 (한 번에 보이기면 false)
   function typeText(paras, done) {
     clearInterval(typing);
     typing = null;
@@ -103,16 +137,16 @@
     $('choices').innerHTML = '';
     el.innerHTML = paras.map((p) => `<p><span class="shown"></span><span class="ghost">${esc(p)}</span></p>`).join('');
     const rows = [...el.querySelectorAll('p')].map((p) => [p.firstChild, p.lastChild]);
-    const finish = () => {
+    const finish = (typed = true) => {
       clearInterval(typing);
       typing = null;
       rows.forEach(([shown, ghost], k) => { shown.textContent = paras[k]; ghost.textContent = ''; });
       dialog.classList.remove('typing');
-      done();
+      done(typed);
     };
-    skip = finish;
+    skip = () => finish(true);
     const speed = SPEED[Store.settings.speed];
-    if (!speed || UI.reduceMotion()) return finish();
+    if (!speed || UI.reduceMotion()) return finish(false);
     const [step, gap] = speed;
     let i = 0;
     let j = 0;
@@ -129,14 +163,7 @@
     }, gap);
   }
 
-  function meets(need) {
-    if (!need) return false;
-    if (typeof need === 'string') return st.bag.includes(need) || st.friends.includes(need);
-    if (need.friends) return st.friends.length >= need.friends;
-    return false;
-  }
-
-  function renderChoices(sc) {
+  function renderChoices(sc, reveal = false) {
     $('choices').innerHTML = sc.choices.map((ch, i) => {
       const tags = [];
       if (ch.game) tags.push(`<span class="tag game">미니게임 · ${esc(ch.game.title)}</span>`);
@@ -144,6 +171,11 @@
       return `<button type="button" class="choice" data-i="${i}"><span class="key">${LETTERS[i]}</span>` +
         `<span class="lbl">${esc(ch.label)}</span>${tags.length ? `<span class="tags">${tags.join('')}</span>` : ''}</button>`;
     }).join('');
+    // 휴대폰처럼 화면이 작으면, 글을 다 읽었을 때 선택지가 화면 아래로 숨지 않게 살짝 올려 준다.
+    const box = $('choices');
+    if (reveal && box.getBoundingClientRect().top > window.innerHeight - 80) {
+      box.scrollIntoView({ block: 'nearest', behavior: UI.reduceMotion() ? 'auto' : 'smooth' });
+    }
   }
 
   // ---------- 선택 ----------
@@ -153,7 +185,7 @@
   }
 
   function choose(i) {
-    if (busy || UI.current !== 'play') return;
+    if (busy || UI.current !== 'play' || UI.modalOpen) return;
     if (typing) { skip(); return; }
     const ch = S.scenes[st.node].choices[i];
     if (!ch) return;
@@ -166,11 +198,11 @@
     });
   }
 
-  // 버터가 충격을 막으면, 결과 문장에서 금이 갔다는 마지막 문장을 버터 이야기로 바꾼다.
-  function shieldSay(say) {
+  // 보호 아이템이 충격을 막으면, 결과 문장에서 금이 갔다는 마지막 문장을 아이템 이야기로 바꾼다.
+  function shieldSay(say, item) {
     const text = say || '';
     const cut = Math.max(text.lastIndexOf('. '), text.lastIndexOf('! '), text.lastIndexOf('? '));
-    return (cut > 0 ? text.slice(0, cut + 1) + ' ' : '') + '그 순간 버터가 미끄덩, 충격을 흡수해 줬어요! 껍질은 멀쩡해요.';
+    return (cut > 0 ? text.slice(0, cut + 1) + ' ' : '') + item.block;
   }
 
   function apply(ch, i, gameResult) {
@@ -183,9 +215,12 @@
     }
     st.hist.push(snapshot());
     if (st.hist.length > 40) st.hist.shift();
-    st.log.push({ place: sc.place, text: sc.text, pick: `${LETTERS[i]}. ${ch.label}` });
+    st.log.push({ place: sc.place, text: lines(sc.text), pick: `${LETTERS[i]}. ${ch.label}` });
     st.steps += 1;
     st.bg = sc.bg;
+    st.from = st.node;
+    if (ch.flag && !st.flags.includes(ch.flag)) st.flags.push(ch.flag);
+    if (ch.set) Object.assign(st.vars, ch.set);
     Store.countChoice();
 
     const notes = [];
@@ -199,6 +234,7 @@
       sound = fx.t > 0 ? 'warm' : 'cold';
     }
     (o.use || []).forEach((id) => {
+      if (!st.bag.includes(id)) return;
       st.bag = st.bag.filter((x) => x !== id);
       notes.push({ cls: 'use', text: `${nameOf(id)} 사용` });
     });
@@ -214,10 +250,11 @@
       }
     });
     if (fx.c > 0) {
-      if (st.bag.includes('butter')) {
-        st.bag = st.bag.filter((x) => x !== 'butter');
-        say = shieldSay(say);
-        notes.push({ cls: 'shield', text: '버터가 충격을 막았어요', float: '버터 방어!' });
+      const shield = shieldId();
+      if (shield) {
+        st.bag = st.bag.filter((x) => x !== shield);
+        say = shieldSay(say, M.items[shield]);
+        notes.push({ cls: 'shield', text: `${iga(M.items[shield].short)} 충격을 막았어요`, float: `${M.items[shield].short} 방어!` });
         sound = 'shield';
       } else {
         st.c = Math.min(MAX_CRACK, st.c + fx.c);
@@ -236,8 +273,8 @@
     st.notes = notes;
     if (sound) Sound.play(sound);
 
-    let next = st.c >= MAX_CRACK ? 'e_crash' : o.to;
-    while (S.scenes[next] && S.scenes[next].branch) next = S.scenes[next].branch(st, S.hatchTemp);
+    let next = st.c >= MAX_CRACK ? story().crash : o.to;
+    while (S.scenes[next] && S.scenes[next].branch) next = S.scenes[next].branch(st, story());
     go(next);
   }
 
@@ -266,23 +303,53 @@
     if (busy || !st.hist.length) return;
     const prev = st.hist.pop();
     Sound.play('tap');
-    st = { ...prev, hist: st.hist };
+    st = { ...fresh(prev.story), ...prev, hist: st.hist };
     shownBg = null;
     go(st.node);
   }
 
-  function newGame() {
-    st = fresh();
-    shownBg = null;
-    Store.countPlay();
-    Sound.play('pick');
-    go(S.first);
+  // 이야기 시작. intro가 참이면 시작 카드를 먼저 보여 준다.
+  function newGame(storyId = st.story, intro = false) {
+    const begin = () => {
+      st = fresh(storyId);
+      shownBg = null;
+      Store.countPlay();
+      Sound.play('pick');
+      go(st.node);
+    };
+    if (intro) UI.storyCard(UI.storyOf(storyId), begin);
+    else begin();
   }
+
+  // 이야기 고르기 화면에서 하나를 골랐을 때
+  function pickStory(id) {
+    Sound.play('tap');
+    const run = Store.loadRun();
+    if (!run || !S.scenes[run.node]) { newGame(id, true); return; }
+    const runId = UI.runStory(run);
+    const runScene = S.scenes[run.node];
+    if (runId === id) {
+      UI.modal({
+        title: '이어서 할까요?',
+        body: `<p>이 이야기를 하던 중이에요. <b>${runScene.ch}장 ${esc(runScene.place)}</b>에서 이어 할 수 있어요.</p>`,
+        actions: [{ label: '처음부터', run: () => newGame(id, true) }, { label: '이어하기', primary: true, run: continueGame }],
+      });
+      return;
+    }
+    const runOf = UI.storyOf(runId);
+    UI.confirmBox({
+      title: '새 이야기를 시작할까요?',
+      text: `하던 모험이 있어요: <b>${esc(runOf.era)} 「${esc(runOf.title)}」 ${runScene.ch}장</b>. 새로 시작하면 그 이어하기 저장은 지워져요.`,
+      ok: '새로 시작',
+      run: () => newGame(id, true),
+    });
+  }
+  window.App.pickStory = pickStory;
 
   function continueGame() {
     const run = Store.loadRun();
-    if (!run || !S.scenes[run.node]) { newGame(); return; }
-    st = { ...fresh(), ...run, hist: Array.isArray(run.hist) ? run.hist : [] };
+    if (!run || !S.scenes[run.node]) { UI.show('stories'); return; }
+    st = { ...fresh(UI.runStory(run)), ...run, story: UI.runStory(run), hist: Array.isArray(run.hist) ? run.hist : [] };
     shownBg = null;
     Sound.play('pick');
     go(st.node);
@@ -353,6 +420,7 @@
   // ---------- 엔딩 ----------
   function renderEnding() {
     const e = S.endings[st.node];
+    const no = UI.endingNo(st.node);
     const before = new Set(UI.unlockedSkins().map((k) => k.id));
     const isNew = Store.markEnding(st.node, st.steps, e.kind);
     Store.clearRun();
@@ -360,17 +428,17 @@
     UI.show('end');
 
     $('end').dataset.kind = e.kind;
+    $('end').dataset.era = no.story.id;
     $('endKind').textContent = KIND[e.kind];
-    $('endNo').textContent = `엔딩 ${pad(endIds.indexOf(st.node) + 1)} / ${pad(endIds.length)}`;
+    $('endNo').textContent = `${UI.storyLabel(no.story)} · 엔딩 ${pad(no.n)} / ${pad(no.total)}`;
     $('endNew').hidden = !isNew;
     $('endTitle').textContent = e.title;
-    $('endBackdrop').innerHTML = Art.scene(ENDING_BG[st.node] || st.bg);
+    $('endBackdrop').innerHTML = Art.scene(e.bg || st.bg);
     const art = $('endArt');
-    art.innerHTML = UI.endingArt(e, skin(), e.title);
-    animateEgg(art, st.node === 'e_crash');
+    art.innerHTML = UI.endingArt(e);
+    animateEgg(art, e.kind === 'bad');
     setSay($('endSay'));
-    const friends = st.friends.map(nameOf).join(', ') || '없음';
-    $('endText').innerHTML = e.text.map((p) => `<p>${esc(p.replace('{friends}', '함께한 친구: ' + friends))}</p>`).join('');
+    $('endText').innerHTML = lines(e.text).map((p) => `<p>${esc(p)}</p>`).join('');
 
     const box = $('endUnlocks');
     box.hidden = !unlocked.length;
@@ -386,22 +454,25 @@
       `<div><dt>사귄 친구</dt><dd>${st.friends.length}명</dd></div>`;
     $('endRoute').innerHTML = st.log.map((l) => `<li><b>${esc(l.place)}</b> <span class="pick">${esc(l.pick)}</span></li>`).join('');
     $('btnEndUndo').disabled = !st.hist.length;
+    $('btnRetry').textContent = `${no.story.era} 이야기 다시`;
 
     Sound.play(e.kind === 'bad' ? 'bad' : 'good');
-    if (st.node === 'e_crash') Sound.buzz([120, 60, 200]);
+    if (st.node === story().crash) Sound.buzz([120, 60, 200]);
     unlocked.forEach((k, n) => setTimeout(() => UI.toast(`새 스킨 해금: <b>${esc(k.name)}</b>`), 700 + n * 450));
   }
 
   function share() {
     const e = S.endings[st.node];
     if (!e) return;
-    const text = `계란이의 모험 · ${KIND[e.kind]} "${e.title}"\n` +
-      `엔딩 ${pad(endIds.indexOf(st.node) + 1)}/${endIds.length} · 선택 ${st.steps}번 · 온기 ${st.t.toFixed(1)}℃ · 금 ${st.c}개 · 친구 ${st.friends.length}명\n` +
-      `엔딩 도감 ${UI.seenCount()}/${endIds.length} 달성!`;
+    const no = UI.endingNo(st.node);
+    const text = `계란이의 모험 · ${UI.storyLabel(no.story)} 「${no.story.title}」\n` +
+      `${KIND[e.kind]} "${e.title}" (엔딩 ${pad(no.n)}/${no.total})\n` +
+      `선택 ${st.steps}번 · 온기 ${st.t.toFixed(1)}℃ · 금 ${st.c}개 · 친구 ${st.friends.length}명\n` +
+      `엔딩 도감 ${UI.seenCount()}/${UI.endIds.length} 달성!`;
     const fallback = () => {
       const body = UI.modal({
         title: '결과 복사',
-        body: `<p>아래 글을 선택해서 복사하세요.</p><textarea class="share-text" id="shareText" rows="4" readonly>${esc(text)}</textarea>`,
+        body: `<p>아래 글을 선택해서 복사하세요.</p><textarea class="share-text" id="shareText" rows="5" readonly>${esc(text)}</textarea>`,
       });
       const ta = body.querySelector('textarea');
       ta.focus();
@@ -416,11 +487,13 @@
 
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
   function pauseMenu() {
-    const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['settings', '설정'], ['restart', '처음부터 다시'], ['title', '타이틀로 (자동 저장됨)']];
-    if (window.App.admin) acts.splice(3, 0, ['admin', '관리자 메뉴']);
+    const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['help', '플레이 방법'], ['settings', '설정'], ['restart', '이 이야기 처음부터'], ['stories', '다른 이야기 고르기'], ['title', '타이틀로 (자동 저장됨)']];
+    if (window.App.admin) acts.splice(4, 0, ['admin', '관리자 메뉴']);
+    const s = story();
     const body = UI.modal({
       title: '잠깐 멈춤',
-      body: `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn" data-act="${a}">${l}</button>`).join('')}</div>`,
+      body: `<p class="hint">${esc(UI.storyLabel(s))} 「${esc(s.title)}」 · 목표: ${esc(s.goal)}</p>` +
+        `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn" data-act="${a}">${l}</button>`).join('')}</div>`,
       actions: [],
     });
     body.querySelector('.menu-list').addEventListener('click', (ev) => {
@@ -431,11 +504,13 @@
       Sound.play('tap');
       if (act === 'log') showLog();
       else if (act === 'bag') showBag();
+      else if (act === 'help') UI.help();
       else if (act === 'settings') UI.show('settings');
       else if (act === 'admin') adminMenu();
       else if (act === 'title') UI.show('title');
+      else if (act === 'stories') UI.show('stories');
       else if (act === 'restart') {
-        UI.confirmBox({ title: '처음부터 다시 할까요?', text: '지금 모험은 사라지고 냉장고에서 다시 시작해요.', ok: '다시 시작', run: newGame });
+        UI.confirmBox({ title: '처음부터 다시 할까요?', text: '지금 모험은 사라지고 이 이야기의 처음으로 돌아가요.', ok: '다시 시작', run: () => newGame(st.story) });
       }
     });
   }
@@ -452,7 +527,7 @@
   }
 
   function showLog() {
-    const items = st.log.map((l) => `<li><h3>${esc(l.place)}</h3>${l.text.map((p) => `<p>${esc(p)}</p>`).join('')}<p class="pick">→ ${esc(l.pick)}</p></li>`).join('');
+    const items = st.log.map((l) => `<li><h3>${esc(l.place)}</h3>${[].concat(l.text).map((p) => `<p>${esc(typeof p === 'string' ? p : p.text)}</p>`).join('')}<p class="pick">→ ${esc(l.pick)}</p></li>`).join('');
     UI.modal({ title: '지난 이야기', body: items ? `<ol class="log-list">${items}</ol>` : '<p class="bag-empty">아직 지나온 장면이 없어요.</p>' });
   }
 
@@ -460,9 +535,11 @@
   function adminMenu() {
     if (!window.App.admin) return;
     const inPlay = UI.current === 'play';
-    const sceneOpts = Object.entries(S.scenes).filter(([, sc]) => !sc.branch)
-      .map(([id, sc]) => `<option value="${id}">${sc.ch}장 · ${esc(sc.place)} (${id})</option>`).join('');
-    const endOpts = endIds.map((id, i) => `<option value="${id}">${pad(i + 1)} · ${esc(S.endings[id].title)}</option>`).join('');
+    const group = (fn) => S.stories.map((s) => `<optgroup label="${esc(UI.storyLabel(s))}">${fn(s)}</optgroup>`).join('');
+    const sceneOpts = group((s) => Object.entries(s.scenes).filter(([, sc]) => !sc.branch)
+      .map(([id, sc]) => `<option value="${id}">${sc.ch}장 · ${esc(sc.place)} (${id})</option>`).join(''));
+    const endOpts = group((s) => Object.keys(s.endings)
+      .map((id, i) => `<option value="${id}">${pad(i + 1)} · ${esc(s.endings[id].title)}</option>`).join(''));
     const body = UI.modal({
       title: '관리자 메뉴',
       body: '<p class="hint">관리자 계정에만 보여요. 계란 옷장의 모든 스킨이 열려 있어요.</p>' +
@@ -474,10 +551,14 @@
           ? '<div class="row"><button type="button" class="btn small" data-adm="warm">온기 +10℃</button>' +
             '<button type="button" class="btn small" data-adm="cold">온기 -10℃</button>' +
             '<button type="button" class="btn small" data-adm="heal">금 없애기</button>' +
-            '<button type="button" class="btn small" data-adm="all">아이템·친구 모두 받기</button></div>'
+            '<button type="button" class="btn small" data-adm="all">이 이야기 아이템·친구 모두 받기</button></div>'
           : '') +
         `<label class="toggle" for="admAutoWin"><span>미니게임 항상 성공</span><input type="checkbox" id="admAutoWin"${window.App.autoWin ? ' checked' : ''}></label>`,
     });
+    if (inPlay) {
+      const cur = body.querySelector(`#admScene option[value="${st.node}"]`);
+      if (cur) cur.selected = true;
+    }
     body.querySelector('#admAutoWin').addEventListener('change', (ev) => {
       window.App.autoWin = ev.target.checked;
       UI.toast(ev.target.checked ? '미니게임을 항상 성공해요.' : '미니게임을 원래대로 해요.');
@@ -490,8 +571,9 @@
       UI.closeModal();
       Sound.play('pick');
       if (act === 'scene' || act === 'ending') {
-        if (UI.current === 'play') st.hist.push(snapshot());
-        else { st = fresh(); shownBg = null; }
+        const sid = (S.scenes[target] || S.endings[target]).story;
+        if (UI.current === 'play' && sid === st.story) st.hist.push(snapshot());
+        else { st = fresh(sid); shownBg = null; }
         st.say = null;
         st.notes = [];
         go(target);
@@ -500,9 +582,16 @@
       if (act === 'warm') st.t = Math.min(40, st.t + 10);
       if (act === 'cold') st.t = Math.max(0, st.t - 10);
       if (act === 'heal') st.c = 0;
-      if (act === 'all') { st.bag = Object.keys(M.items); st.friends = Object.keys(M.friends); }
+      if (act === 'all') {
+        // 이 이야기에 나오는 아이템·친구만 받는다.
+        const own = new Set();
+        Object.values(story().scenes).forEach((sc) => (sc.choices || []).forEach((ch) => [ch, ch.alt || {}].forEach((x) => (x.gain || []).forEach((id) => own.add(id)))));
+        st.bag = [...own].filter((id) => M.items[id]);
+        st.friends = [...own].filter((id) => M.friends[id]);
+      }
       hud();
       $('egg').innerHTML = Art.egg(skin(), { mood: S.scenes[st.node].mood, cracks: st.c });
+      renderChoices(S.scenes[st.node]);
       save();
       UI.toast('관리자: 상태를 바꿨어요.');
     });
@@ -512,15 +601,18 @@
   // ---------- 입력 ----------
   $('btnAdmin').addEventListener('click', () => { Sound.play('tap'); adminMenu(); });
   $('btnNew').addEventListener('click', () => {
-    if (!Store.loadRun()) { newGame(); return; }
-    UI.confirmBox({ title: '새로 시작할까요?', text: '이어하던 모험이 있어요. 새로 시작하면 그 저장은 지워져요.', ok: '새로 시작', run: newGame });
+    Sound.play('tap');
+    if (!Store.settings.seenHelp) UI.help(() => UI.show('stories'));
+    else UI.show('stories');
   });
   $('btnContinue').addEventListener('click', continueGame);
+  $('btnHelp').addEventListener('click', () => { Sound.play('tap'); UI.help(); });
   [['btnBook', 'book'], ['btnCloset', 'closet'], ['btnSettings', 'settings'], ['btnCredits', 'credits'],
-    ['btnEndBook', 'book'], ['btnEndCredits', 'credits'], ['btnEndTitle', 'title']].forEach(([id, screen]) => {
+    ['btnEndCredits', 'credits'], ['btnEndTitle', 'title'], ['btnEndStories', 'stories']].forEach(([id, screen]) => {
     $(id).addEventListener('click', () => { Sound.play('tap'); UI.show(screen); });
   });
-  $('btnRetry').addEventListener('click', newGame);
+  $('btnEndBook').addEventListener('click', () => { Sound.play('tap'); UI.bookTab = st.story; UI.show('book'); });
+  $('btnRetry').addEventListener('click', () => newGame(st.story));
   $('btnUndo').addEventListener('click', undo);
   $('btnEndUndo').addEventListener('click', undo);
   $('btnShare').addEventListener('click', share);
@@ -554,7 +646,7 @@
       if (typing && (k === ' ' || k === 'Enter') && !onButton) { ev.preventDefault(); skip(); return; }
       const idx = { a: 0, b: 1, c: 2, 1: 0, 2: 1, 3: 2 }[k.toLowerCase()];
       if (idx !== undefined) choose(idx);
-    } else if (['book', 'closet', 'settings', 'credits'].includes(UI.current) && k === 'Escape') {
+    } else if (['stories', 'book', 'closet', 'settings', 'credits'].includes(UI.current) && k === 'Escape') {
       UI.back();
     }
   });
@@ -581,7 +673,7 @@
   const boot = (data) => {
     const saved = data && data.st;
     if (saved && data.screen === 'play' && S.scenes[saved.node]) {
-      st = { ...fresh(), ...saved };
+      st = { ...fresh(UI.runStory(saved)), ...saved, story: UI.runStory(saved) };
       go(st.node);
     } else {
       UI.show('title');

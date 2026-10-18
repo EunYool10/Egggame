@@ -15,7 +15,7 @@
   box-shadow: 0 3px 0 var(--drop);
 }
 .where { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.chap { flex: none; padding: 1px 10px; border-radius: 999px; background: var(--yolk); color: var(--yolk-ink); font-size: 0.8rem; }
+.chap { flex: none; padding: 1px 10px; border-radius: 999px; background: var(--era, var(--yolk)); color: var(--era-ink, var(--yolk-ink)); font-size: 0.8rem; }
 .place { min-width: 0; overflow: hidden; font-family: var(--f-display); font-size: 1.2rem; white-space: nowrap; text-overflow: ellipsis; }
 .bag-btn {
   display: inline-flex;
@@ -78,6 +78,22 @@
   overflow: hidden;
   background: var(--bg-2);
   box-shadow: 0 4px 0 var(--drop);
+}
+.stage-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  max-width: calc(100% - 16px);
+  overflow: hidden;
+  padding: 0 10px;
+  border: 2px solid var(--edge);
+  border-radius: 99px;
+  background: var(--era, var(--paper));
+  color: var(--era-ink, var(--ink));
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .stage-egg { position: absolute; left: 50%; bottom: 3%; width: 24%; max-width: 140px; transform: translateX(-50%); }
 .stage-egg svg, .hero-egg svg { animation: bob 3.2s ease-in-out infinite; transform-origin: 50% 90%; }
@@ -239,6 +255,10 @@
 .route li::marker { color: var(--muted); }
 .route b { font-family: var(--f-display); font-weight: 400; }
 .route .pick { color: var(--muted); }
+.end-actions { display: grid; gap: 12px; }
+.end-main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.end-main .btn { min-height: 52px; }
+.end-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 
 /* ---------- 미니게임 ---------- */
 .game-sheet { justify-items: center; text-align: center; }
@@ -260,10 +280,13 @@
 .game-result.win { color: var(--good); }
 .game-result.lose { color: var(--danger); }
 
+@media (max-width: 520px) {
+  .stage { aspect-ratio: 16 / 7.4; }
+}
 @media (max-width: 420px) {
   .bar { width: 88px; }
   .bar i { background-size: 84px 100%; }
-  .stage-egg { width: 28%; }
+  .stage-egg { width: 26%; }
   .dialog { padding: 14px 16px 22px; }
   .place { font-size: 1.05rem; }
 }

@@ -1,8 +1,8 @@
 {
   "name": "egggame",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "계란이의 모험 - A·B·C 선택형 텍스트 어드벤처",
+  "description": "계란이의 모험 - 현대·고대·미래 세 이야기의 A·B·C 선택형 텍스트 어드벤처",
   "type": "module",
   "scripts": {
     "start": "node server.mjs"

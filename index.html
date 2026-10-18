@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#cfe8f3">
 <!-- @@PAGE-START@@ -->
 <title>계란이의 모험</title>
-<meta name="description" content="냉장고를 탈출한 계란이가 꼬꼬엄마 품을 찾아 떠나는 A·B·C 선택형 텍스트 어드벤처">
+<meta name="description" content="현대·고대·미래, 세 시대의 계란이가 엄마 품을 찾아 떠나는 A·B·C 선택형 텍스트 어드벤처">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Jua&display=swap">
@@ -21,27 +21,45 @@
 
   <!-- 타이틀 -->
   <section class="screen title-screen" id="title">
-    <div class="title-stage">
-      <div class="backdrop" id="titleBackdrop"></div>
+    <header class="title-top">
+      <div class="account" id="account" aria-live="polite"></div>
+      <button type="button" class="icon-btn" id="btnSettings" aria-label="설정">
+        <svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><circle cx="16" cy="16" r="4.5"/><path d="M16 3 v4 M16 25 v4 M3 16 h4 M25 16 h4 M6.8 6.8 l2.8 2.8 M22.4 22.4 l2.8 2.8 M6.8 25.2 l2.8 -2.8 M22.4 9.6 l2.8 -2.8"/></svg>
+      </button>
+    </header>
+    <div class="hero">
+      <div class="hero-bg" id="titleBackdrop"></div>
       <div class="egg hero-egg" id="titleEgg"></div>
+      <div class="era-chips" aria-hidden="true"><span style="--i:0">현대</span><span style="--i:1">고대</span><span style="--i:2">미래</span></div>
     </div>
-    <h1 class="logo">계란이의 <em>모험</em></h1>
-    <p class="tagline">냉장고 맨 끝자리에서 꼬꼬엄마 품까지. 고르는 길마다 결말이 달라져요.</p>
-    <div class="account" id="account" aria-live="polite"></div>
+    <div class="logo-wrap">
+      <h1 class="logo">계란이의 <em>모험</em></h1>
+      <p class="tagline">현대·고대·미래, 세 시대의 계란이가 엄마 품을 찾아 떠나요. 고르는 길마다 결말이 달라져요.</p>
+    </div>
     <nav class="menu" aria-label="메인 메뉴">
-      <button type="button" class="btn primary" id="btnContinue" hidden>
+      <button type="button" class="btn primary go" id="btnContinue" hidden>
         <span>이어하기</span><small id="continueInfo"></small>
       </button>
-      <button type="button" class="btn primary" id="btnNew"><span>새로 시작</span></button>
-      <div class="menu-grid">
-        <button type="button" class="btn" id="btnBook">엔딩 도감</button>
-        <button type="button" class="btn" id="btnCloset">계란 옷장</button>
-        <button type="button" class="btn" id="btnSettings">설정</button>
-        <button type="button" class="btn" id="btnCredits">만든 사람들</button>
+      <button type="button" class="btn primary go" id="btnNew"><span>모험 시작</span><small>이야기 고르기</small></button>
+      <div class="tiles">
+        <button type="button" class="tile" id="btnBook"><span>엔딩 도감</span><small id="bookTile"></small></button>
+        <button type="button" class="tile" id="btnCloset"><span>계란 옷장</span><small id="closetTile"></small></button>
+        <button type="button" class="tile" id="btnHelp"><span>플레이 방법</span><small>처음이라면</small></button>
+        <button type="button" class="tile" id="btnCredits"><span>만든 사람들</span><small>크레딧</small></button>
       </div>
       <button type="button" class="btn admin-btn" id="btnAdmin" hidden>관리자 메뉴</button>
     </nav>
     <p class="title-foot" id="titleFoot"></p>
+  </section>
+
+  <!-- 이야기 고르기 -->
+  <section class="screen page" id="stories" hidden>
+    <header class="page-head">
+      <button type="button" class="btn small back" data-back>← 뒤로</button>
+      <h2>이야기 고르기</h2>
+    </header>
+    <p class="page-lead">어느 시대의 계란이가 되어 볼까요? 이야기마다 길도, 친구도, 결말도 달라요.</p>
+    <ul class="story-list" id="storyList"></ul>
   </section>
 
   <!-- 이야기 진행 -->
@@ -71,6 +89,7 @@
 
     <div class="stage" id="stage">
       <div class="backdrop" id="backdrop"></div>
+      <span class="stage-tag" id="stageTag"></span>
       <div class="egg stage-egg" id="egg"></div>
       <div class="floaters" id="floaters" aria-hidden="true"></div>
     </div>
@@ -108,18 +127,23 @@
     <p class="say" id="endSay" hidden></p>
     <div class="narr story" id="endText"></div>
     <div class="unlocks" id="endUnlocks" hidden></div>
-    <dl class="stats" id="endStats"></dl>
+    <dl class="stats four" id="endStats"></dl>
     <details class="route">
       <summary>지나온 길</summary>
       <ol id="endRoute"></ol>
     </details>
-    <div class="row center wrap-actions">
-      <button type="button" class="btn primary" id="btnRetry">처음부터 다시</button>
-      <button type="button" class="btn" id="btnEndUndo">마지막 선택 되돌리기</button>
-      <button type="button" class="btn" id="btnShare">결과 복사</button>
-      <button type="button" class="btn" id="btnEndCredits">엔딩 크레딧</button>
-      <button type="button" class="btn" id="btnEndBook">엔딩 도감</button>
-      <button type="button" class="btn" id="btnEndTitle">타이틀로</button>
+    <div class="end-actions">
+      <div class="end-main">
+        <button type="button" class="btn primary" id="btnRetry">이 이야기 다시</button>
+        <button type="button" class="btn" id="btnEndStories">다른 이야기</button>
+      </div>
+      <div class="end-more">
+        <button type="button" class="btn small" id="btnEndUndo">마지막 선택 되돌리기</button>
+        <button type="button" class="btn small" id="btnShare">결과 복사</button>
+        <button type="button" class="btn small" id="btnEndBook">엔딩 도감</button>
+        <button type="button" class="btn small" id="btnEndCredits">엔딩 크레딧</button>
+        <button type="button" class="btn small" id="btnEndTitle">타이틀로</button>
+      </div>
     </div>
   </section>
 
@@ -129,12 +153,16 @@
       <button type="button" class="btn small back" data-back>← 뒤로</button>
       <h2>엔딩 도감</h2>
     </header>
-    <div class="progress">
-      <div class="progress-bar"><i id="bookFill"></i></div>
-      <span id="bookCount"></span>
+    <div class="tabs" id="bookTabs" role="tablist" aria-label="이야기"></div>
+    <div class="book-head">
+      <h3 id="bookTitle"></h3>
+      <div class="progress">
+        <div class="progress-bar"><i id="bookFill"></i></div>
+        <span id="bookCount"></span>
+      </div>
     </div>
-    <dl class="stats" id="bookStats"></dl>
     <ul class="book-grid" id="bookGrid"></ul>
+    <dl class="stats" id="bookStats"></dl>
   </section>
 
   <!-- 계란 옷장 -->
@@ -181,7 +209,7 @@
     </div>
   </section>
 
-  <!-- 공용 창 (확인, 일시정지 메뉴, 가방, 지난 이야기) -->
+  <!-- 공용 창 (확인, 일시정지 메뉴, 가방, 지난 이야기, 이야기 시작 카드, 플레이 방법) -->
   <div class="overlay" id="modal" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <h2 id="modalTitle"></h2>
@@ -208,6 +236,9 @@
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
 </div>
+<script src="js/stories/modern.js"></script>
+<script src="js/stories/ancient.js"></script>
+<script src="js/stories/future.js"></script>
 <script src="js/story.js"></script>
 <script src="js/meta.js"></script>
 <script src="js/art.js"></script>

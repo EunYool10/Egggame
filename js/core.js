@@ -1,4 +1,4 @@
-// 계란이의 모험 v2 — 저장(설정·진행·도감), 소리(Web Audio 합성), 진동
+// 계란이의 모험 v3 — 저장(설정·진행·도감), 소리(Web Audio 합성), 진동
 // 저장은 이 브라우저의 localStorage에만 한다. 막혀 있으면 이번 방문 동안만 기억한다.
 window.Store = (() => {
   'use strict';
@@ -15,6 +15,7 @@ window.Store = (() => {
     difficulty: 'normal', // easy · normal · hard
     motion: 'system', // system · reduce
     skin: 'white',
+    seenHelp: false, // 플레이 방법을 한 번 봤는지
   };
 
   function read(key, fallback) {
@@ -109,7 +110,7 @@ window.Store = (() => {
       rec.n += 1;
       book.endings[id] = rec;
       book.stats.finished += 1;
-      if (id === 'e_crash') book.stats.crashes += 1;
+      if ((window.STORY.stories || []).some((s) => s.crash === id)) book.stats.crashes += 1;
       if (kind === 'true' && (book.stats.bestTrue == null || steps < book.stats.bestTrue)) book.stats.bestTrue = steps;
       saveBook();
       return fresh;

@@ -23,6 +23,7 @@ window.Account = (() => {
   };
   const LAST_UID = 'egg2:uid'; // 이 기기에서 마지막으로 로그인한 계정 (다음 방문에 바로 그 기록을 보여 준다)
   const RUN_LIMIT = 40000; // firestore.rules의 run 길이 제한과 같다
+  const SCENE_LIMIT = 60; // firestore.rules의 scenes 개수 제한과 같다
   const SYNC_TEXT = { saving: '저장 중…', saved: '계정에 저장됨', error: '저장 실패 · 잠시 뒤 다시 시도해요' };
 
   let fb = null;
@@ -154,7 +155,7 @@ window.Account = (() => {
   function toCloud(book) {
     const endings = {};
     Object.entries(book.endings).forEach(([id, r]) => { if (S.endings[id]) endings[id] = clampInt(r && r.n, 1, 100000); });
-    const scenes = Object.keys(book.scenes).filter((id) => S.scenes[id] && !S.scenes[id].branch).slice(0, 14);
+    const scenes = Object.keys(book.scenes).filter((id) => S.scenes[id] && !S.scenes[id].branch).slice(0, SCENE_LIMIT);
     const s = book.stats;
     return {
       endings,
@@ -171,7 +172,8 @@ window.Account = (() => {
   function fromCloud(cb) {
     if (!cb) return null;
     const endings = {};
-    Object.entries(cb.endings || {}).forEach(([id, n]) => { endings[id] = { n, first: Date.now() }; });
+    // 보안 규칙은 엔딩 횟수 값을 하나하나 검사하지 않으니(firestore.rules 참고) 여기서 바로잡는다.
+    Object.entries(cb.endings || {}).forEach(([id, n]) => { if (S.endings[id]) endings[id] = { n: clampInt(n, 1, 100000), first: Date.now() }; });
     const scenes = {};
     (cb.scenes || []).forEach((id) => { scenes[id] = 1; });
     return { endings, scenes, stats: cb.stats || {} };
@@ -264,8 +266,9 @@ window.Account = (() => {
         `<small>${SYNC_TEXT[sync] || '로그인됨'}</small></span>` +
         '<button type="button" class="btn small" data-acc="logout">로그아웃</button>';
     } else {
-      box.innerHTML = '<span class="who">게스트로 플레이 중<small>로그인하면 기록이 계정에 저장돼 다른 기기에서도 이어 할 수 있어요</small></span>' +
-        '<button type="button" class="btn small" data-acc="login">Google로 로그인</button>';
+      box.innerHTML = '<span class="avatar guest" aria-hidden="true">?</span>' +
+        '<span class="who"><b>게스트</b><small>로그인하면 기록이 남아요</small></span>' +
+        '<button type="button" class="btn small" data-acc="login">Google 로그인</button>';
     }
   }
   // 로그인 상태가 바뀌면 지금 보고 있는 화면(타이틀·도감·옷장)을 다시 그린다.
