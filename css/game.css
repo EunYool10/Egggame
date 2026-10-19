@@ -411,3 +411,51 @@
 /* 움직임 줄이기에서도 알림은 보이게 둔다 (사라지는 건 스크립트가 맡는다). */
 @media (prefers-reduced-motion: reduce) { .toast { animation: none !important; } }
 html[data-motion="reduce"] .toast { animation: none !important; }
+
+/* ---------- 길 위의 일 (결과 줄 아래) ---------- */
+.say .event { flex: 1 1 100%; min-width: 0; padding-top: 6px; border-top: 1.5px dashed var(--line); color: var(--ink); }
+.say .event b { margin-right: 4px; font-family: var(--f-display); font-weight: 400; color: var(--muted); }
+.say .event .chip { white-space: nowrap; }
+
+/* ---------- 잠깐 멈춤 ---------- */
+.pause-head { display: grid; justify-items: start; gap: 2px; }
+.pause-head b { font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; line-height: 1.3; }
+.pause-head small { font-size: 0.85rem; color: var(--muted); }
+.pause-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; }
+.pause-stats div { padding: 8px 6px; border-radius: var(--r-sm); background: var(--bg-2); text-align: center; }
+.pause-stats dt { font-size: 0.75rem; color: var(--muted); }
+.pause-stats dd { margin: 0; font-family: var(--f-display); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.pause-stats dd.hot { color: var(--hot); }
+.pause-stats dd.bad { color: var(--danger); }
+.pause-goal { font-size: 0.88rem; line-height: 1.5; color: var(--muted); }
+.pause-goal b { margin-right: 4px; color: var(--ink); }
+.pause-resume { width: 100%; }
+.pause-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pause-tile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 2px solid var(--edge);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--drop);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.pause-tile svg { flex: none; width: 24px; height: 24px; color: var(--muted); }
+.pause-tile small { margin-left: 2px; padding: 0 7px; border-radius: 99px; background: var(--bg-2); color: var(--muted); font-size: 0.75rem; }
+.pause-tile:hover { background: var(--yolk-soft); }
+.pause-tile:active { transform: translateY(3px); box-shadow: 0 0 0 var(--drop); }
+.pause-admin { justify-self: center; }
+.pause-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 18px; padding-top: 10px; border-top: 1.5px solid var(--line); }
+.pause-more .link-btn { min-height: 40px; padding: 4px 2px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.9rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.pause-more .link-btn:hover { color: var(--ink); }
+.pause-more .link-btn:first-child { color: var(--danger); }
+.pause-saved { text-align: center; }
+.say .event:first-child { padding-top: 0; border-top: 0; }

@@ -435,6 +435,10 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .skin-group[data-era="staff"] h3 { color: var(--k-hidden); }
 .skin-group[data-era="staff"] h3::before { background: var(--k-hidden); }
 .skin-group[data-era="staff"] .skin { border-color: var(--k-hidden); }
+/* 일반 플레이어에게는 구경만 (입을 수 없음) */
+.skin.view-only { border-style: dashed; }
+.skin.view-only .egg { opacity: 1; }
+.skin.view-only .cond { color: var(--k-hidden); }
 .skin-group[data-era="staff"] .skin.on { background: var(--yolk-soft); box-shadow: 0 3px 0 var(--k-hidden); }
 .skin-group h3 small { font-family: var(--f-ui); font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .skin-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }

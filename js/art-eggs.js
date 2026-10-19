@@ -297,3 +297,88 @@
     hatDy: { bowtie: -16, sunglasses: -18, wings: 'translate(15 8) scale(.75)', headset: 'translate(18 35) scale(.69)' },
   });
 })();
+
+// ── v3.5에 더한 무늬와 모자 ──
+(() => {
+  'use strict';
+
+  const { dots, spark, flake } = window.Art.kit;
+  const each = (list, f) => list.map(f).join('');
+  const line = (d, color, w = 2.5, op = 1) =>
+    `<path d="${d}" stroke="${color}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  const AROUND = [[28, 40], [86, 32], [98, 100], [22, 106], [60, 126]];
+  const star5 = (x, y, r, color, op = 1) => {
+    const pts = Array.from({ length: 10 }, (_, i) => {
+      const a = (Math.PI / 5) * i - Math.PI / 2;
+      const d = i % 2 ? r * 0.5 : r;
+      return `${(x + d * Math.cos(a)).toFixed(1)} ${(y + d * Math.sin(a)).toFixed(1)}`;
+    });
+    return `<path d="M${pts.join(' L')} Z" fill="${color}" opacity="${op}"/>`;
+  };
+
+  const patterns = {
+    // 체크판
+    checker: (k) => each(Array.from({ length: 99 }, (_, n) => [n % 9, Math.floor(n / 9)]).filter(([x, y]) => (x + y) % 2), ([x, y]) =>
+      `<rect x="${-4 + x * 14}" y="${-4 + y * 14}" width="14" height="14" fill="${k.pc || '#6fa8e0'}" opacity=".25"/>`),
+    // 지그재그 띠
+    zigzag: (k) => each([24, 48, 118], (y) => line(`M-4 ${y} ${Array.from({ length: 7 }, (_, i) => `l9 -8 l9 8`).join(' ')}`, k.pc || '#f2a900', 4, 0.75)),
+    // 벚꽃
+    petals: () => each(AROUND, ([x, y]) => each([0, 72, 144, 216, 288], (a) =>
+      `<circle cx="${(x + 5.5 * Math.cos((a * Math.PI) / 180)).toFixed(1)}" cy="${(y + 5.5 * Math.sin((a * Math.PI) / 180)).toFixed(1)}" r="4.2" fill="#f7a8c4" opacity=".9"/>`) +
+      `<circle cx="${x}" cy="${y}" r="2.2" fill="#fff2a8"/>`) +
+      each([[52, 54, 30], [70, 22, -20], [104, 70, 50], [14, 76, -40], [80, 128, 10]], ([x, y, r]) =>
+        `<ellipse cx="${x}" cy="${y}" rx="4" ry="2.4" fill="#f7a8c4" opacity=".75" transform="rotate(${r} ${x} ${y})"/>`),
+    // 단풍
+    maple: () => each(AROUND.map(([x, y], i) => [x, y, ['#e2702f', '#d8402c', '#f2a900', '#c8413a', '#e2952f'][i]]), ([x, y, c]) =>
+      star5(x, y, 9, c, 0.85) + line(`M${x} ${y + 3} l2 8`, '#8a5a36', 1.6, 0.8)),
+    // 눈송이
+    snow: () => each([[28, 38, 7], [86, 30, 6], [100, 96, 7], [20, 104, 6], [62, 126, 6], [56, 56, 4]], ([x, y, r]) => flake(x, y, r, '#ffffff')) +
+      dots([[44, 24, 2], [74, 52, 1.8], [12, 70, 2], [106, 66, 1.8], [40, 122, 2], [88, 118, 2]], '#ffffff', 0.9),
+    // 딸기 씨
+    seeds: () => each([[30, 34], [52, 22], [74, 28], [94, 44], [22, 60], [100, 72], [18, 92], [104, 98], [30, 118], [50, 128], [72, 128], [92, 118], [60, 48], [40, 46], [82, 50]], ([x, y]) =>
+      `<path d="M${x} ${y - 3} Q${x + 2.4} ${y} ${x} ${y + 3} Q${x - 2.4} ${y} ${x} ${y - 3} Z" fill="#ffe27a"/>`),
+    // 치즈 구멍
+    cheese: () => each([[30, 40, 7], [84, 30, 5], [98, 92, 8], [20, 100, 6], [60, 126, 7], [58, 52, 4], [104, 60, 4], [38, 120, 3.5]], ([x, y, r]) =>
+      `<circle cx="${x}" cy="${y}" r="${r}" fill="#e0a812" opacity=".55"/><circle cx="${x + r * 0.25}" cy="${y + r * 0.25}" r="${r * 0.7}" fill="#c98f0a" opacity=".35"/>`),
+    // 노을
+    sunset: () => '<rect x="-4" y="-4" width="128" height="34" fill="#ff9a5a" opacity=".55"/><rect x="-4" y="30" width="128" height="22" fill="#ff7aa2" opacity=".35"/>' +
+      '<rect x="-4" y="112" width="128" height="32" fill="#7b55b8" opacity=".25"/><circle cx="60" cy="30" r="12" fill="#ffd34d" opacity=".9"/>',
+    // 빗줄기
+    rain: () => each([[24, 30], [44, 18], [70, 26], [92, 40], [16, 64], [104, 70], [22, 110], [44, 122], [78, 124], [100, 108], [60, 54]], ([x, y]) =>
+      line(`M${x} ${y} l-4 9`, '#6fa8e0', 2.4, 0.8)),
+    // 고양이 발자국
+    paw: (k) => each([[28, 42, -20], [88, 34, 15], [98, 104, 25], [22, 110, -30], [60, 128, 0]], ([x, y, r]) =>
+      `<g transform="rotate(${r} ${x} ${y})" fill="${k.pc || '#8a5a36'}" opacity=".55"><ellipse cx="${x}" cy="${y + 2}" rx="5" ry="4"/>` +
+      `<circle cx="${x - 5}" cy="${y - 4}" r="2"/><circle cx="${x}" cy="${y - 6}" r="2"/><circle cx="${x + 5}" cy="${y - 4}" r="2"/></g>`),
+    // 바다
+    ocean: () => '<path d="M-4 110 q10 -8 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V144 H-4 Z" fill="#4f9fd0" opacity=".55"/>' +
+      '<path d="M-4 124 q10 -8 20 0 t20 0 t20 0 t20 0 t20 0 t20 0 t20 0 V144 H-4 Z" fill="#2f6f9a" opacity=".55"/>' +
+      `<circle cx="30" cy="40" r="3" fill="none" stroke="#4f9fd0" stroke-width="1.6"/><circle cx="36" cy="30" r="2" fill="none" stroke="#4f9fd0" stroke-width="1.4"/>` +
+      '<path d="M84 36 q8 -6 14 0 q-6 6 -14 0 Z M98 36 l5 -4 v8 Z" fill="#f08a24" opacity=".85"/>',
+    // 궤도
+    orbit: () => '<ellipse cx="60" cy="72" rx="58" ry="16" fill="none" stroke="#7b55b8" stroke-width="1.8" opacity=".5" transform="rotate(-20 60 72)"/>' +
+      '<ellipse cx="60" cy="72" rx="58" ry="16" fill="none" stroke="#3f8fd0" stroke-width="1.8" opacity=".5" transform="rotate(25 60 72)"/>' +
+      dots([[10, 92, 4], [108, 50, 3.5], [26, 30, 3], [100, 112, 3]], '#7b55b8', 0.8) + spark(80, 24, 5, '#ffd34d', 1),
+    // 산
+    mountains: () => '<path d="M-4 144 L20 104 L40 126 L62 96 L86 124 L104 106 L128 144 Z" fill="#6f8f6a" opacity=".6"/>' +
+      '<path d="M56 105 L62 96 L68 105 Z M16 111 L20 104 L24 111 Z" fill="#ffffff" opacity=".9"/>' + line('M-4 30 q15 -6 30 0 t30 0', '#9aa5ad', 2, 0.5),
+    // 반창고 투성이
+    bandaids: () => each([[30, 40, -30], [88, 34, 25], [98, 106, -15], [24, 112, 35]], ([x, y, r]) =>
+      `<g transform="rotate(${r} ${x} ${y})"><rect x="${x - 15}" y="${y - 5}" width="30" height="10" rx="5" fill="#f2c79a" stroke="#3b2f2a" stroke-width="1.5"/>` +
+      `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" fill="#e9b886"/></g>`),
+  };
+
+  const hats = {
+    pirate: '<path class="ink" d="M22 16 C28 -8 92 -8 98 16 Q60 6 22 16 Z" fill="#2f3640"/>' +
+      '<circle cx="60" cy="2" r="4.5" fill="#fff6e6"/><path d="M53 9 L67 14 M67 9 L53 14" stroke="#fff6e6" stroke-width="2" stroke-linecap="round"/>',
+    santa: '<path class="ink" d="M32 16 C34 -6 62 -20 88 -10 C80 -4 82 6 88 16 Z" fill="#d8402c"/>' +
+      '<rect class="ink" x="28" y="11" width="64" height="11" rx="5.5" fill="#ffffff"/><circle class="ink" cx="89" cy="-11" r="6" fill="#ffffff"/>',
+    flowerpin: (k) => each([0, 72, 144, 216, 288], (a) =>
+      `<circle class="ink" cx="${(82 + 6 * Math.cos((a * Math.PI) / 180)).toFixed(1)}" cy="${(14 + 6 * Math.sin((a * Math.PI) / 180)).toFixed(1)}" r="4.6" fill="${k.hc || '#f58cb4'}"/>`) +
+      '<circle class="ink" cx="82" cy="14" r="3" fill="#ffd34d"/>',
+    laurel: (k) => each([[36, 18, -60], [40, 10, -40], [46, 4, -25], [53, 0, -10], [84, 18, 60], [80, 10, 40], [74, 4, 25], [67, 0, 10]], ([x, y, r]) =>
+      `<ellipse class="ink" cx="${x}" cy="${y}" rx="6" ry="3" fill="${k.hc || '#6aa84f'}" transform="rotate(${r} ${x} ${y})"/>`),
+  };
+
+  window.Art.extend({ patterns, hats });
+})();

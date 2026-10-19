@@ -1,4 +1,4 @@
-// 계란이의 모험 v3.4 — 옷장에 더한 계란 95종 (meta.js 다음에 읽는다. 무늬·모자 그림은 art-eggs.js)
+// 계란이의 모험 — 옷장에 더한 계란 (v3.4 95종, v3.5 40종). meta.js 다음에 읽는다. 무늬·모자 그림은 art-eggs.js
 // 스킨 값은 meta.js와 같다. 더해서 pc 무늬 색, pt 무늬 글자, hc 모자 색을 쓸 수 있다.
 // 새 해금 조건: { scenes: 가 본 장소 수 또는 'all' } · { stat: 'plays'|'finished'|'crashes'|'choices', n: 횟수 }
 //               { story: 이야기 id, n: 그 이야기 엔딩 수 } (n이 없으면 그 이야기 엔딩 모두)
@@ -109,4 +109,56 @@ window.META.skins.push(
   { id: 'st-ruby', name: '루비 알', desc: '붉게 빛나는 루비 티아라를 썼어요.', shell: '#f4889a', pattern: 'gem', hat: 'tiara', hc: '#c8203a', unlock: { admin: true } },
   { id: 'st-sapphire', name: '사파이어 알', desc: '푸르게 빛나는 사파이어 티아라를 썼어요.', shell: '#8fb4f2', pattern: 'gem', hat: 'tiara', hc: '#2f5fc0', unlock: { admin: true } },
   { id: 'st-emerald', name: '에메랄드 알', desc: '초록빛 에메랄드 티아라를 썼어요.', shell: '#86d9ac', pattern: 'gem', hat: 'tiara', hc: '#1f8a52', unlock: { admin: true } },
+);
+
+// ── v3.5에 더한 계란 40종 (일반 30 · 운영진 10) ──
+window.META.skins.push(
+  // 처음부터
+  { id: 'coral', name: '산호 계란', desc: '바닷속 산호처럼 고운 주홍빛.', shell: '#ffb8a8', unlock: null },
+  { id: 'lilac', name: '라일락 계란', desc: '봄바람에 실려 온 라일락 향기 같은 색.', shell: '#e8d4f7', unlock: null },
+  { id: 'checky', name: '체크판 계란', desc: '파란 체크판 무늬가 산뜻해요.', shell: '#fffdf6', pattern: 'checker', unlock: null },
+  { id: 'zigzag', name: '지그재그 계란', desc: '노란 번개 같은 지그재그 줄무늬.', shell: '#fff6e6', pattern: 'zigzag', unlock: null },
+  { id: 'pinkdot', name: '분홍 물방울', desc: '분홍 물방울이 톡톡 튄 계란.', shell: '#fff0f4', pattern: 'polka', pc: '#f06b8f', unlock: null },
+  // 엔딩 모으기
+  { id: 'blossom', name: '벚꽃 계란', desc: '꽃잎이 흩날리는 봄날의 계란.', shell: '#ffeef4', pattern: 'petals', unlock: { count: 7 } },
+  { id: 'maple', name: '단풍 계란', desc: '알록달록 가을 단풍이 내려앉았어요.', shell: '#fff3e0', pattern: 'maple', unlock: { count: 9 } },
+  { id: 'snowy', name: '눈송이 계란', desc: '첫눈이 소복소복 내려앉았어요.', shell: '#d8e9fb', pattern: 'snow', unlock: { count: 14 } },
+  { id: 'strawberry', name: '딸기 계란', desc: '새콤달콤 빨간 딸기. 씨가 송송.', shell: '#f0546a', pattern: 'seeds', hat: 'tangleaf', unlock: { count: 16 } },
+  { id: 'cheese', name: '치즈 계란', desc: '구멍이 숭숭 뚫린 고소한 치즈.', shell: '#ffd84d', pattern: 'cheese', unlock: { count: 22 } },
+  { id: 'sunset', name: '노을 계란', desc: '해 질 녘 하늘을 그대로 담았어요.', shell: '#ffe0c2', pattern: 'sunset', unlock: { count: 28 } },
+  // 엔딩 종류
+  { id: 'laurel', name: '월계관', desc: '평범한 하루를 꿋꿋이 걸어 낸 계란에게.', shell: '#fff6e6', hat: 'laurel', unlock: { kind: 'normal', n: 3 } },
+  { id: 'santa', name: '산타 계란', desc: '행복한 결말을 선물처럼 모았어요.', shell: '#fff6e6', hat: 'santa', unlock: { kind: 'happy', n: 4 } },
+  { id: 'pirate', name: '해적 계란', desc: '숨은 길을 찾아다니는 보물 사냥꾼.', shell: '#efe4d2', hat: 'pirate', unlock: { kind: 'hidden', n: 3 } },
+  { id: 'rainy', name: '빗속 계란', desc: '비를 맞아도 다시 굴러가요.', shell: '#dfe8f2', pattern: 'rain', unlock: { kind: 'bad', n: 3 } },
+  { id: 'catpaw', name: '고양이 발자국', desc: '나비가 꾹꾹 밟고 간 자국.', shell: '#fff3e6', pattern: 'paw', unlock: { kind: 'bad', n: 8 } },
+  // 이야기
+  { id: 'flowerpin', name: '꽃핀 계란', desc: '할머니 댁 화단에서 꽂아 준 꽃핀.', shell: '#fff6e6', hat: 'flowerpin', unlock: { story: 'modern', n: 8 } },
+  { id: 'wave', name: '파도 계란', desc: '가야 포구의 파도와 작은 물고기.', shell: '#e3f3fb', pattern: 'ocean', unlock: { story: 'ancient', n: 3 } },
+  { id: 'constellation', name: '별자리 계란', desc: '닭의 숲 밤하늘에 뜬 금빛 별자리.', shell: '#cfd8f0', pattern: 'starry', pc: '#e0b030', unlock: { story: 'ancient', n: 12 } },
+  { id: 'orbit', name: '궤도 계란', desc: '행성들이 빙글빙글 도는 우주 궤도.', shell: '#eeeaff', pattern: 'orbit', unlock: { story: 'future', n: 7 } },
+  // 탐험과 기록
+  { id: 'hiker', name: '등산로 계란', desc: '오르락내리락 초록 등산로.', shell: '#eef6e6', pattern: 'zigzag', pc: '#4f9a5a', unlock: { scenes: 15 } },
+  { id: 'mountain', name: '산 넘어 계란', desc: '산 넘고 물 건너 여기까지 왔어요.', shell: '#eaf2f7', pattern: 'mountains', unlock: { scenes: 25 } },
+  { id: 'bluebeanie', name: '파란 털모자', desc: '모험을 다섯 번 떠난 계란의 털모자.', shell: '#fff6e6', hat: 'beanie', hc: '#3f8fd0', unlock: { stat: 'plays', n: 5 } },
+  { id: 'greenbeanie', name: '초록 털모자', desc: '모험 스무 번째, 새로 뜬 초록 털모자.', shell: '#fff6e6', hat: 'beanie', hc: '#5fae6a', unlock: { stat: 'plays', n: 20 } },
+  { id: 'goldlaurel', name: '금빛 월계관', desc: '모험을 쉰 번 떠난 계란의 영광.', shell: '#fff4c9', hat: 'laurel', hc: '#e0b030', unlock: { stat: 'plays', n: 50 } },
+  { id: 'heartstar', name: '분홍 별 계란', desc: '엔딩을 열 번 보며 모은 분홍 별.', shell: '#fff0f4', pattern: 'starry', pc: '#e76f9a', unlock: { stat: 'finished', n: 10 } },
+  { id: 'amethyst', name: '자수정 알', desc: '엔딩을 백 번 본 계란의 보랏빛 보석.', shell: '#c9b8f0', pattern: 'gem', unlock: { stat: 'finished', n: 100 } },
+  { id: 'pinkpuzzle', name: '분홍 퍼즐', desc: '다섯 번 깨져도 다시 맞춘 분홍 조각.', shell: '#fff6e6', pattern: 'puzzle', pc: '#f7a8c4', unlock: { stat: 'crashes', n: 5 } },
+  { id: 'bandaids', name: '반창고 투성이', desc: '스무 번 깨지고도 씩씩한 계란.', shell: '#fff6e6', pattern: 'bandaids', unlock: { stat: 'crashes', n: 20 } },
+  { id: 'chess', name: '체스판 계란', desc: '선택을 오백 번! 한 수 한 수 신중하게.', shell: '#f4f4f4', pattern: 'checker', pc: '#3b2f2a', unlock: { stat: 'choices', n: 500 } },
+  { id: 'starlight', name: '별빛 계란', desc: '선택을 이천 번 한 계란에게 내리는 별빛.', shell: '#d6dcf5', pattern: 'starry', pc: '#ffd34d', unlock: { stat: 'choices', n: 2000 } },
+
+  // 운영진 전용
+  { id: 'st-help', name: '도우미 명찰', desc: '처음 온 플레이어를 돕는 도우미의 명찰.', shell: '#dff7f6', pattern: 'badge', pt: 'HELP', pc: '#16a3a3', unlock: { admin: true } },
+  { id: 'st-event', name: '이벤트 명찰', desc: '즐거운 이벤트를 여는 운영진의 명찰.', shell: '#fff0f4', pattern: 'badge', pt: 'EVENT', pc: '#e76f9a', unlock: { admin: true } },
+  { id: 'st-santa', name: '산타 운영진', desc: '업데이트를 선물처럼 들고 오는 산타.', shell: '#fff6e6', pattern: 'snow', hat: 'santa', unlock: { admin: true } },
+  { id: 'st-pirate', name: '해적 선장', desc: '숨은 버그를 찾아 항해하는 선장.', shell: '#f3e2b8', pattern: 'map', hat: 'pirate', unlock: { admin: true } },
+  { id: 'st-laurel', name: '명예의 월계관', desc: '오래 함께한 운영진에게 바치는 월계관.', shell: '#fff4c9', pattern: 'shine', hat: 'laurel', hc: '#e0b030', unlock: { admin: true } },
+  { id: 'st-galaxy', name: '은하 운영진', desc: '은하수 너머까지 게임을 지켜요.', shell: '#cdbdf5', pattern: 'galaxy', hat: 'halo', unlock: { admin: true } },
+  { id: 'st-cherry', name: '벚꽃 운영진', desc: '봄 이벤트를 준비하는 꽃핀 운영진.', shell: '#ffe6ef', pattern: 'petals', hat: 'flowerpin', unlock: { admin: true } },
+  { id: 'st-ocean', name: '바다 지킴이', desc: '헤드셋으로 바다 건너 목소리도 들어요.', shell: '#e3f3fb', pattern: 'ocean', hat: 'headset', hc: '#3f6fc0', unlock: { admin: true } },
+  { id: 'st-sunset', name: '노을 운영진', desc: '하루 일을 마치고 노을을 보는 운영진.', shell: '#ffe0c2', pattern: 'sunset', hat: 'sunglasses', unlock: { admin: true } },
+  { id: 'st-orbit', name: '궤도 관제사', desc: '서버 궤도를 살피는 관제 운영진.', shell: '#e8eef2', pattern: 'orbit', hat: 'dish', unlock: { admin: true } },
 );

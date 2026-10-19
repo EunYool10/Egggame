@@ -393,20 +393,24 @@ window.UI = (() => {
     renderClosetTop(cur);
     const visible = visibleSkins();
     $('closetCount').textContent = `${visible.filter(isUnlocked).length} / ${visible.length}개 모음 · 엔딩을 볼수록 늘어나요`;
+    // 일반 플레이어도 운영진 계란을 구경할 수 있다 (입을 수는 없고, 옷장 맨 아래에 따로 둔다)
+    const viewOnly = (sk) => staffOnly(sk) && !window.App.admin;
     const cell = (sk) => {
       const open = isUnlocked(sk);
+      const look = open || viewOnly(sk);
       const on = sk.id === cur.id;
-      return `<li><button type="button" class="skin${open ? '' : ' locked'}${on ? ' on' : ''}" data-skin="${sk.id}" aria-pressed="${on}">` +
-        `<span class="egg">${open ? Art.egg(sk, { mood: 'calm', label: sk.name }) : Art.mystery('잠긴 스킨')}</span>` +
-        `<span>${open ? esc(sk.name) : '???'}</span>` +
-        `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : esc(condText(sk))}</span></button></li>`;
+      return `<li><button type="button" class="skin${open ? '' : ' locked'}${viewOnly(sk) ? ' view-only' : ''}${on ? ' on' : ''}" data-skin="${sk.id}" aria-pressed="${on}">` +
+        `<span class="egg">${look ? Art.egg(sk, { mood: 'calm', label: sk.name }) : Art.mystery('잠긴 스킨')}</span>` +
+        `<span>${look ? esc(sk.name) : '???'}</span>` +
+        `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : viewOnly(sk) ? '구경만 할 수 있어요' : esc(condText(sk))}</span></button></li>`;
     };
     const groups = SKIN_GROUPS.map(([g, name, short]) => ({ g, name, short, list: visible.filter((sk) => skinGroup(sk) === g).sort((a, b) => skinRank(a) - skinRank(b)) }))
       .filter((x) => x.list.length);
+    if (!window.App.admin) groups.push({ g: 'staff', name: '운영진 전용', short: '운영진', list: M.skins.filter(staffOnly) });
     $('skinJump').innerHTML = groups.map((x) =>
       `<button type="button" class="jump-chip" data-jump="${x.g}" data-era="${x.g}">${esc(x.short)}</button>`).join('');
     $('skinGrid').innerHTML = groups.map(({ g, name, list }) =>
-      `<section class="skin-group" data-era="${g}" id="skins-${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
+      `<section class="skin-group" data-era="${g}" id="skins-${g}"><h3>${name} <small>${list.some(viewOnly) ? `${list.length}종` : `${list.filter(isUnlocked).length} / ${list.length}`}</small></h3>` +
       `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`).join('');
   }
   // 계란을 바꿔 입을 때는 옷장 전체를 다시 그리지 않고, 위쪽 미리 보기와 바뀐 두 칸만 고친다.
@@ -428,6 +432,11 @@ window.UI = (() => {
     const b = ev.target.closest('[data-skin]');
     if (!b) return;
     const sk = M.skins.find((k) => k.id === b.dataset.skin);
+    if (staffOnly(sk) && !window.App.admin) {
+      Sound.play('tap');
+      toast(`<b>${esc(sk.name)}</b>: 운영진 전용 계란이라 구경만 할 수 있어요.`);
+      return;
+    }
     if (!isUnlocked(sk)) {
       Sound.play('lose');
       toast(`아직 잠겨 있어요. <b>${esc(condText(sk))}</b>`);

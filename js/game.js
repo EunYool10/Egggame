@@ -31,9 +31,38 @@
     return {
       story: s.id, node: s.first, from: null, t: s.startTemp, c: 0, steps: 0, bag: [], friends: [], flags: [], vars: {},
       say: null, notes: [], log: [], bg: s.bg, hist: [],
+      seed: Math.floor(Math.random() * 2147483646) + 1, used: [], event: null,
     };
   }
   const story = () => UI.storyOf(st.story);
+
+  // 모험마다 선택지 순서를 섞는다. 같은 모험 안에서는 늘 같은 순서 (이어하기·되돌리기에도 그대로).
+  function orderOf(node) {
+    const sc = S.scenes[node];
+    const idx = [...Array(sc && sc.choices ? sc.choices.length : 0).keys()];
+    if (!st.seed) return idx;
+    let h = st.seed >>> 0;
+    for (const ch of node) h = Math.imul(h ^ ch.charCodeAt(0), 2654435761) >>> 0;
+    for (let i = idx.length - 1; i > 0; i -= 1) {
+      h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+      const j = h % (i + 1);
+      [idx[i], idx[j]] = [idx[j], idx[i]];
+    }
+    return idx;
+  }
+
+  // 길 위의 일 (js/events.js): kind는 'open'(출발) 또는 'road'(장면 사이). 한 모험에서 같은 일은 한 번만.
+  const ROAD_CHANCE = 0.45;
+  function rollEvent(kind) {
+    const list = ((window.EVENTS || {})[st.story] || {})[kind] || [];
+    const used = st.used || (st.used = []);
+    const pool = list.map((e, k) => ({ ...e, id: kind + k })).filter((e) => !used.includes(e.id));
+    if (!pool.length) return null;
+    const e = pool[Math.floor(Math.random() * pool.length)];
+    used.push(e.id);
+    if (e.t) st.t = Math.max(0, Math.min(40, st.t + e.t));
+    return { kind, text: e.text, t: e.t || 0 };
+  }
   const nameOf = (id) => (M.items[id] || M.friends[id] || { name: id }).name;
   const skin = () => UI.currentSkin();
   const shieldId = () => st.bag.find((id) => M.items[id] && M.items[id].shield);
@@ -93,8 +122,10 @@
     return (notes || []).map((n) => `<span class="chip ${n.cls}">${esc(n.text)}</span>`).join('');
   }
   function setSay(el) {
-    el.hidden = !st.say && !st.notes.length;
-    el.innerHTML = (st.say ? `<span>${esc(st.say)}</span>` : '') + chipsHTML(st.notes);
+    const ev = st.event;
+    el.hidden = !st.say && !st.notes.length && !ev;
+    el.innerHTML = (st.say ? `<span>${esc(st.say)}</span>` : '') + chipsHTML(st.notes) +
+      (ev ? `<span class="event"><b>${ev.kind === 'open' ? '오늘은' : '길 위에서'}</b> ${esc(ev.text)}${ev.t ? ` <span class="chip ${ev.t > 0 ? 'warm' : 'cold'}">온기 ${ev.t > 0 ? '+' : ''}${ev.t}℃</span>` : ''}</span>` : '');
   }
 
   function floaters() {
@@ -210,13 +241,14 @@
   }
 
   function renderChoices(sc, reveal = false) {
-    $('choices').innerHTML = sc.choices.map((ch, i) => {
+    $('choices').innerHTML = orderOf(st.node).map((i, pos) => {
+      const ch = sc.choices[i];
       const tags = [];
       if (ch.game) tags.push(`<span class="tag game">${esc(Minigames.label(ch.game))} 게임 · ${esc(ch.game.title)}</span>`);
       if (ch.alt && meets(ch.alt.need)) tags.push(`<span class="tag alt">${esc(ch.alt.tag)}</span>`);
       if (seen(targetOf(ch))) tags.push('<span class="tag seen">가 본 길</span>');
       const peek = opt('peek') ? `<span class="peek">${esc(peekLine(ch))}</span>` : '';
-      return `<button type="button" class="choice" data-i="${i}"><span class="key">${LETTERS[i]}</span>` +
+      return `<button type="button" class="choice" data-i="${i}"><span class="key">${LETTERS[pos]}</span>` +
         `<span class="lbl">${esc(ch.label)}</span>${tags.length ? `<span class="tags">${tags.join('')}</span>` : ''}${peek}</button>`;
     }).join('');
     // 휴대폰처럼 화면이 작으면, 글을 다 읽었을 때 선택지가 화면 아래로 숨지 않게 살짝 올려 준다.
@@ -283,7 +315,7 @@
     }
     st.hist.push(snapshot());
     if (st.hist.length > 40) st.hist.shift();
-    st.log.push({ place: sc.place, text: lines(sc.text), pick: `${LETTERS[i]}. ${ch.label}` });
+    st.log.push({ place: sc.place, text: lines(sc.text), pick: `${LETTERS[orderOf(st.node).indexOf(i)]}. ${ch.label}` });
     st.steps += 1;
     st.bg = sc.bg;
     st.from = st.node;
@@ -343,6 +375,9 @@
 
     let next = st.c >= MAX_CRACK ? story().crash : o.to;
     while (S.scenes[next] && S.scenes[next].branch) next = S.scenes[next].branch(st, story());
+    st.event = null;
+    const nextScene = S.scenes[next];
+    if (nextScene && nextScene.ch < 4 && Math.random() < ROAD_CHANCE) st.event = rollEvent('road');
     go(next);
   }
 
@@ -383,6 +418,7 @@
   function newGame(storyId = st.story, intro = false) {
     const begin = () => {
       st = fresh(storyId);
+      st.event = rollEvent('open');
       shownBg = null;
       skinsBefore = openSkins();
       Store.countPlay();
@@ -525,17 +561,38 @@
   }
 
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
+  // 잠깐 멈춤: 지금 상태 요약 → 크게 '이어서 하기' → 자주 쓰는 것 4칸 → 나머지는 작게
+  const PAUSE_ICONS = {
+    log: '<path d="M8 5 H22 L26 9 V27 H8 Z"/><path d="M12 13 H22 M12 18 H22 M12 23 H18"/>',
+    bag: '<path d="M7 11 H25 L23 27 H9 Z"/><path d="M12 11 V9 a4 4 0 0 1 8 0 V11"/>',
+    help: '<circle cx="16" cy="16" r="11"/><path d="M12.5 12.5 a3.5 3.5 0 1 1 5 3.2 c-1.2 0.7 -1.5 1.5 -1.5 2.8"/><circle cx="16" cy="22.5" r="0.8"/>',
+    settings: '<circle cx="16" cy="16" r="4"/><path d="M16 4 v4 M16 24 v4 M4 16 h4 M24 16 h4 M7.5 7.5 l2.8 2.8 M21.7 21.7 l2.8 2.8 M7.5 24.5 l2.8 -2.8 M21.7 10.3 l2.8 -2.8"/>',
+  };
+  const pauseIcon = (k) => `<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${PAUSE_ICONS[k]}</svg>`;
+
   function pauseMenu() {
-    const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['help', '플레이 가이드'], ['settings', '설정'], ['restart', '이 이야기 처음부터'], ['stories', '다른 이야기 고르기'], ['title', '타이틀로 (자동 저장됨)']];
-    if (window.App.adminAccount) acts.splice(4, 0, ['admin', '관리자 뷰어']);
     const s = story();
+    const sc = S.scenes[st.node] || {};
+    const tiles = [['log', '지난 이야기'], ['bag', `가방·친구 <small>${st.bag.length + st.friends.length}</small>`], ['help', '플레이 가이드'], ['settings', '설정']];
     const body = UI.modal({
       title: '잠깐 멈춤',
-      body: `<p class="hint">${esc(UI.storyLabel(s))} 「${esc(s.title)}」 · 목표: ${esc(s.goal)}</p>` +
-        `<div class="menu-list">${acts.map(([a, l]) => `<button type="button" class="btn${a === 'admin' ? ' admin-btn' : ''}" data-act="${a}">${l}</button>`).join('')}</div>`,
+      body: `<div class="pause-head" data-era="${s.id}"><span class="era-pill">${esc(UI.storyLabel(s))}</span>` +
+        `<b>「${esc(s.title)}」</b><small>${sc.ch || 1}장 · ${esc(sc.place || '')}</small></div>` +
+        `<dl class="pause-stats"><div><dt>온기</dt><dd class="${st.t >= READY_TEMP ? 'hot' : ''}">${st.t.toFixed(1)}℃</dd></div>` +
+        `<div><dt>껍질의 금</dt><dd class="${st.c ? 'bad' : ''}">${st.c} / ${MAX_CRACK}</dd></div>` +
+        `<div><dt>고른 선택</dt><dd>${st.steps}번</dd></div></dl>` +
+        `<p class="pause-goal"><b>목표</b> ${esc(s.goal)}</p>` +
+        '<button type="button" class="btn primary big pause-resume" data-act="resume">▶ 이어서 하기</button>' +
+        `<div class="pause-tiles">${tiles.map(([a, l]) => `<button type="button" class="pause-tile" data-act="${a}">${pauseIcon(a)}<span>${l}</span></button>`).join('')}</div>` +
+        (window.App.adminAccount ? '<button type="button" class="btn small admin-btn pause-admin" data-act="admin">관리자 뷰어</button>' : '') +
+        '<div class="pause-more"><button type="button" class="link-btn" data-act="restart">처음부터 다시</button>' +
+        '<button type="button" class="link-btn" data-act="stories">다른 이야기</button>' +
+        '<button type="button" class="link-btn" data-act="title">타이틀로</button></div>' +
+        '<p class="hint pause-saved">지금까지의 모험은 자동으로 저장돼요.</p>',
       actions: [],
     });
-    body.querySelector('.menu-list').addEventListener('click', (ev) => {
+    body.querySelector('.pause-resume').focus({ preventScroll: true });
+    body.addEventListener('click', (ev) => {
       const b = ev.target.closest('[data-act]');
       if (!b) return;
       const act = b.dataset.act;
@@ -549,7 +606,7 @@
       else if (act === 'title') UI.show('title');
       else if (act === 'stories') UI.show('stories');
       else if (act === 'restart') {
-        UI.confirmBox({ title: '처음부터 다시 할까요?', text: '지금 모험은 사라지고 이 이야기의 처음으로 돌아가요.', ok: '다시 시작', run: () => newGame(st.story) });
+        UI.confirmBox({ title: '처음부터 다시 할까요?', text: '지금 모험은 사라지고 이 이야기의 처음으로 돌아가요.', ok: '다시 시작', danger: true, run: () => newGame(st.story) });
       }
     });
   }
@@ -647,7 +704,7 @@
       const onButton = document.activeElement && document.activeElement.tagName === 'BUTTON';
       if (typing && (k === ' ' || k === 'Enter') && !onButton) { ev.preventDefault(); skip(); return; }
       const idx = { a: 0, b: 1, c: 2, 1: 0, 2: 1, 3: 2 }[k.toLowerCase()];
-      if (idx !== undefined) choose(idx);
+      if (idx !== undefined) choose(orderOf(st.node)[idx]);
     } else if (['stories', 'book', 'closet', 'settings', 'credits', 'admin'].includes(UI.current) && k === 'Escape') {
       UI.back();
     }
