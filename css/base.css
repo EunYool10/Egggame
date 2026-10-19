@@ -243,6 +243,7 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .app-link .app-icon { display: block; width: 52px; height: 52px; border-radius: 13px; box-shadow: 0 2px 0 var(--drop); }
 .app-link b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; line-height: 1.3; }
 .app-link small { display: block; margin-top: 2px; font-size: 0.82rem; line-height: 1.45; color: var(--muted); }
+.app-link small.slow { margin-top: 4px; font-size: 0.76rem; color: var(--app); }
 .app-link .go { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--app); color: #fff; font-size: 0.95rem; }
 @media (max-width: 359px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
@@ -301,11 +302,27 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .detail-kind[data-kind="hidden"] { --k: var(--k-hidden); }
 .detail-kind[data-kind="bad"] { --k: var(--k-bad); }
 .detail-kind .kd { padding: 0 10px; border: 2px solid var(--k); border-radius: 99px; color: var(--k); }
-.help-list { display: grid; gap: 8px; margin: 0; }
-.help-list div { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 10px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--bg-2); }
-.help-list dt { font-family: var(--f-display); }
-.help-list dd { margin: 0; font-size: 0.9rem; }
-@media (max-width: 420px) { .help-list div { grid-template-columns: 1fr; gap: 2px; } }
+
+/* ---------- 플레이 가이드 (넘겨 보는 카드) ---------- */
+.gs-count { margin: -8px 0 0; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gs-art { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 150px; padding: 14px; border: 2px solid var(--edge); border-radius: var(--r); background: var(--yolk-soft); }
+.gs-art .egg { width: 76px; }
+.gs-keys { display: grid; gap: 6px; }
+.gs-keys b { display: grid; place-items: center; width: 34px; height: 30px; border: 2px solid var(--edge); border-radius: 10px; background: var(--paper); font-family: var(--f-display); font-weight: 400; box-shadow: 0 2px 0 var(--drop); }
+.gs-keys b:first-child { background: var(--good); color: var(--paper); }
+.gs-arrow { font-size: 1.6rem; color: var(--muted); }
+.gs-temp { font-family: var(--f-display); font-size: 1.6rem; color: var(--hot); }
+.gs-bar { position: relative; width: 120px; height: 22px; border: 2px solid var(--edge); border-radius: 99px; background: var(--paper); overflow: hidden; }
+.gs-bar i { position: absolute; top: 0; bottom: 0; left: 55%; width: 22%; background: var(--yolk); }
+.gs-bar em { position: absolute; top: -2px; bottom: -2px; left: 62%; width: 4px; background: var(--edge); }
+.gs-head { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.25rem; }
+.gs-text { color: var(--muted); line-height: 1.55; }
+.gs-dots { display: flex; justify-content: center; gap: 6px; }
+.gs-dots i { width: 8px; height: 8px; border: 1.5px solid var(--edge); border-radius: 99px; background: var(--paper); transition: width 0.15s ease; }
+.gs-dots i.on { width: 22px; background: var(--edge); }
+.gs-nav { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.gs-nav .gs-prev { width: 48px; padding: 0; font-size: 1.2rem; }
+.gs-nav .gs-prev:disabled { visibility: hidden; }
 
 /* ---------- 쪽 화면 (도감, 옷장, 설정) ---------- */
 .page { gap: 18px; }

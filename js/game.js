@@ -526,7 +526,7 @@
 
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
   function pauseMenu() {
-    const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['help', '플레이 방법'], ['settings', '설정'], ['restart', '이 이야기 처음부터'], ['stories', '다른 이야기 고르기'], ['title', '타이틀로 (자동 저장됨)']];
+    const acts = [['resume', '이어서 하기'], ['log', '지난 이야기'], ['bag', '가방과 친구'], ['help', '플레이 가이드'], ['settings', '설정'], ['restart', '이 이야기 처음부터'], ['stories', '다른 이야기 고르기'], ['title', '타이틀로 (자동 저장됨)']];
     if (window.App.adminAccount) acts.splice(4, 0, ['admin', '관리자 뷰어']);
     const s = story();
     const body = UI.modal({

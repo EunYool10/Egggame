@@ -103,8 +103,9 @@ window.UI = (() => {
     });
     onModalClose = onClose;
     $('modal').hidden = false;
+    $('modal').querySelector('.sheet').scrollTop = 0; // 창은 늘 맨 위부터 보여 준다 (아래 버튼에 포커스가 가도)
     const first = $('modalBody').querySelector('button') || box.querySelector('.primary, .danger') || box.querySelector('button');
-    if (first) first.focus();
+    if (first) first.focus({ preventScroll: true });
     return $('modalBody');
   }
   function closeModal() {
@@ -132,26 +133,8 @@ window.UI = (() => {
     else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
   }
 
-  // ---------- 플레이 방법 ----------
-  const HELP = [
-    ['고르기', '글을 읽고 A·B·C 가운데 하나를 골라요. 키보드로는 A·B·C나 1·2·3을 눌러요.'],
-    ['온기', '계란이는 차가워요. 둥지에 닿기 전에 몸을 20℃ 넘게 데워 두면, 마지막 밤을 버티기 쉬워요.'],
-    ['껍질', '금이 세 개 가면 와장창! 버터·갑옷·테이프 같은 보호 아이템은 충격을 한 번 막아 줘요.'],
-    ['가방과 친구', '아이템이나 친구가 있으면 선택지에 초록 표시가 붙고, 결과가 달라져요. 친구가 셋 넘으면 특별한 일도 생겨요.'],
-    ['미니게임', '왔다 갔다 하는 계란이를 노란 칸에서 멈추세요. 설정에서 난이도를 바꿀 수 있어요.'],
-    ['이야기와 엔딩', '현대·고대·미래, 이야기마다 길과 결말이 달라요. 본 엔딩은 도감에 모이고, 계란 옷장 스킨이 열려요.'],
-  ];
-  function help(after) {
-    modal({
-      title: '플레이 방법',
-      body: `<dl class="help-list">${HELP.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`,
-      actions: [{ label: after ? '알겠어요, 시작할게요' : '닫기', primary: Boolean(after) }],
-      onClose: () => {
-        Store.set('seenHelp', true);
-        if (after) after();
-      },
-    });
-  }
+  // ---------- 플레이 가이드 (넘겨 보는 안내 카드, js/guide.js) ----------
+  const help = (after) => window.Guide.open(after);
 
   // ---------- 스킨 ----------
   const kindSeen = (kind) => endIds.filter((id) => S.endings[id].kind === kind && Store.book.endings[id]).length;
@@ -292,7 +275,8 @@ window.UI = (() => {
       body: '<p class="hint">누르면 새 탭에서 열려요.</p>' +
         `<ul class="app-list">${(M.apps || []).map((a) => `<li><a class="app-link" href="${esc(a.url)}" target="_blank" rel="noopener" style="--app: ${esc(a.color)}">` +
           `<img class="app-icon" src="${esc(a.icon)}" width="52" height="52" alt="">` +
-          `<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><span class="go" aria-hidden="true">↗</span></a></li>`).join('')}</ul>`,
+          `<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.slow ? '<small class="slow">무료 서버라 처음 열 때 30초쯤 걸릴 수 있어요.</small>' : ''}</span>` +
+          '<span class="go" aria-hidden="true">↗</span></a></li>').join('')}</ul>`,
     });
   }
   $('btnApps').addEventListener('click', () => { Sound.play('tap'); showApps(); });
