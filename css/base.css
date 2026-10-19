@@ -218,6 +218,32 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .tile:active { transform: translateY(3px); box-shadow: 0 0 0 var(--drop); }
 .tile small { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .title-foot { margin: 0; font-size: 0.85rem; color: var(--muted); }
+/* 은율이의 다른 앱 */
+.menu .apps-btn { min-height: 44px; font-size: 0.95rem; }
+.apps-btn svg { flex: none; width: 20px; height: 20px; color: var(--muted); }
+.app-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+/* 앱마다 파비콘 그림과 파비콘 색(--app)으로 꾸민다 */
+.app-link {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 10px;
+  border: 2px solid var(--edge);
+  border-left: 8px solid var(--app);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 3px 0 var(--drop);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+.app-link:hover { background: var(--yolk-soft); background: color-mix(in srgb, var(--app) 12%, var(--paper)); }
+.app-link:active { transform: translateY(3px); box-shadow: 0 0 0 var(--drop); }
+.app-link .app-icon { display: block; width: 52px; height: 52px; border-radius: 13px; box-shadow: 0 2px 0 var(--drop); }
+.app-link b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; line-height: 1.3; }
+.app-link small { display: block; margin-top: 2px; font-size: 0.82rem; line-height: 1.45; color: var(--muted); }
+.app-link .go { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--app); color: #fff; font-size: 0.95rem; }
 @media (max-width: 359px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* ---------- 이야기 고르기 ---------- */
@@ -358,12 +384,36 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .closet-info { min-width: 0; }
 .closet-info h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.5rem; }
 .closet-info p { margin: 4px 0 0; }
+/* 옷장 묶음 바로 가기 */
+.skin-jump { display: flex; flex-wrap: wrap; gap: 6px; }
+.jump-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 3px 12px 3px 9px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.jump-chip::before { content: ''; width: 9px; height: 9px; border: 2px solid var(--edge); border-radius: 50%; background: var(--era, var(--yolk)); }
+.jump-chip[data-era="base"]::before { background: var(--paper); }
+.jump-chip[data-era="staff"] { border-color: var(--k-hidden); color: var(--k-hidden); }
+.jump-chip[data-era="staff"]::before { background: var(--k-hidden); }
+.jump-chip:hover { border-color: var(--edge); background: var(--yolk-soft); }
 .skin-groups { display: grid; gap: 18px; }
+.skin-group { scroll-margin-top: 12px; }
 .skin-group { display: grid; gap: 10px; }
 .skin-group h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; }
 .skin-group h3::before { content: ''; width: 12px; height: 12px; border: 2px solid var(--edge); border-radius: 50%; background: var(--era, var(--yolk)); }
 .skin-group[data-era="base"] h3::before { background: var(--paper); }
-.skin-group[data-era="reward"] h3::before { background: var(--k-true); }
+.skin-group[data-era="count"] h3::before, .jump-chip[data-era="count"]::before { background: var(--k-true); }
+.skin-group[data-era="kind"] h3::before, .jump-chip[data-era="kind"]::before { background: var(--k-bad); }
+.skin-group[data-era="story"] h3::before, .jump-chip[data-era="story"]::before { background: var(--k-normal); }
+.skin-group[data-era="record"] h3::before, .jump-chip[data-era="record"]::before { background: var(--muted); }
 /* 운영진 전용 계란 (관리자 계정에만 보인다) */
 .skin-group[data-era="staff"] h3 { color: var(--k-hidden); }
 .skin-group[data-era="staff"] h3::before { background: var(--k-hidden); }

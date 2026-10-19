@@ -384,6 +384,7 @@
     const begin = () => {
       st = fresh(storyId);
       shownBg = null;
+      skinsBefore = openSkins();
       Store.countPlay();
       Sound.play('pick');
       go(st.node);
@@ -417,9 +418,14 @@
   }
   window.App.pickStory = pickStory;
 
+  // 이번 모험을 시작할 때 열려 있던 스킨. 모험 도중에 (선택·장면·플레이 횟수로) 열린 스킨도 엔딩에서 함께 알려 준다.
+  let skinsBefore = null;
+  const openSkins = () => new Set(UI.unlockedSkins().map((k) => k.id));
+
   function continueGame() {
     const run = Store.loadRun();
     if (!run || !S.scenes[run.node]) { UI.show('stories'); return; }
+    skinsBefore = openSkins();
     st = { ...fresh(UI.runStory(run)), ...run, story: UI.runStory(run), hist: Array.isArray(run.hist) ? run.hist : [] };
     st.notes = (st.notes || []).map(({ float, ...n }) => n);
     shownBg = null;
@@ -431,10 +437,11 @@
   function renderEnding(record = true) {
     const e = S.endings[st.node];
     const no = UI.endingNo(st.node);
-    const before = new Set(UI.unlockedSkins().map((k) => k.id));
+    const before = record && skinsBefore ? skinsBefore : openSkins();
     const isNew = record ? Store.markEnding(st.node, st.steps, e.kind) : false;
     if (record) Store.clearRun();
     const unlocked = UI.unlockedSkins().filter((k) => !before.has(k.id));
+    if (record) skinsBefore = openSkins(); // 되돌리기로 다른 엔딩을 보면 그 뒤에 열린 것만 알린다
     UI.show('end');
 
     $('end').dataset.kind = e.kind;

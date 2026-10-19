@@ -155,17 +155,30 @@ window.UI = (() => {
 
   // ---------- 스킨 ----------
   const kindSeen = (kind) => endIds.filter((id) => S.endings[id].kind === kind && Store.book.endings[id]).length;
+  // 가 본 장면 수 (선택지가 있는 장면만 센다)
+  const placeIds = Object.keys(S.scenes).filter((id) => !S.scenes[id].branch);
+  const placesSeen = () => placeIds.filter((id) => Store.book.scenes[id]).length;
+  const STAT_TEXT = { plays: (n) => `모험 ${n}번 떠나기`, finished: (n) => `엔딩 ${n}번 보기`, crashes: (n) => `와장창 ${n}번 겪기`, choices: (n) => `선택 ${n}번 하기` };
+  // 해금 조건까지 [지금, 목표]
+  function progress(u) {
+    if (u.ending) return [Store.book.endings[u.ending] ? 1 : 0, 1];
+    if (u.story) {
+      const s = storyOf(u.story);
+      return [storySeen(s), u.n || storyEnds(s).length];
+    }
+    if (u.kind) return [kindSeen(u.kind), u.n];
+    if (u.scenes) return [placesSeen(), u.scenes === 'all' ? placeIds.length : u.scenes];
+    if (u.stat) return [Store.book.stats[u.stat] || 0, u.n];
+    if (u.count) return [seenCount(), u.count === 'all' ? endIds.length : u.count];
+    return [0, 1];
+  }
   function isUnlocked(skin) {
     const u = skin.unlock;
     if (!u) return true;
     if (u.admin) return Boolean(window.App.admin); // 운영진 전용 계란
     if (window.App.admin) return true; // 관리자는 모든 스킨을 쓸 수 있다
-    if (u.ending) return Boolean(Store.book.endings[u.ending]);
-    if (u.story) return storySeen(storyOf(u.story)) >= storyEnds(storyOf(u.story)).length;
-    if (u.kind) return kindSeen(u.kind) >= u.n;
-    if (u.count === 'all') return seenCount() >= endIds.length;
-    if (u.count) return seenCount() >= u.count;
-    return false;
+    const [have, need] = progress(u);
+    return have >= need;
   }
   // 운영진 전용 계란은 관리자 계정(관리자 권한을 켠 상태)에만 보이고, 일반 플레이어의 개수 세기에서도 빠진다.
   const staffOnly = (skin) => Boolean(skin.unlock && skin.unlock.admin);
@@ -183,21 +196,38 @@ window.UI = (() => {
       const no = endingNo(u.ending);
       return `${no.story.era} 엔딩 ${pad(no.n)} 발견하기`;
     }
-    if (u.story) {
-      const s = storyOf(u.story);
-      return `${s.era} 엔딩 모두 모으기 (${storySeen(s)}/${storyEnds(s).length})`;
-    }
-    if (u.kind) return `${KIND[u.kind]} ${u.n}개 보기 (${Math.min(kindSeen(u.kind), u.n)}/${u.n})`;
-    if (u.count === 'all') return `모든 엔딩 발견하기 (${seenCount()}/${endIds.length})`;
-    return `엔딩 ${u.count}개 발견하기 (${Math.min(seenCount(), u.count)}/${u.count})`;
+    const [have, need] = progress(u);
+    const of = ` (${Math.min(have, need)}/${need})`;
+    if (u.story) return `${storyOf(u.story).era} 엔딩 ${u.n ? `${u.n}개 보기` : '모두 모으기'}${of}`;
+    if (u.kind) return `${KIND[u.kind]} ${u.n}개 보기${of}`;
+    if (u.scenes) return `${u.scenes === 'all' ? '모든 장면' : `장면 ${u.scenes}개`} 가 보기${of}`;
+    if (u.stat) return STAT_TEXT[u.stat](u.n) + of;
+    return `${u.count === 'all' ? '모든 엔딩' : `엔딩 ${u.count}개`} 발견하기${of}`;
   }
-  // 옷장 묶음: 운영진 전용 · 처음부터 · 이야기별 엔딩 · 모으기 보상
+  // 옷장 묶음: 운영진 전용 · 처음부터 · 이야기별 엔딩 · 엔딩 모으기 · 엔딩 종류 · 이야기 · 탐험과 기록
+  const SKIN_GROUPS = [['staff', '운영진 전용', '운영진'], ['base', '처음부터 있는 계란', '기본'],
+    ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`, s.era]),
+    ['count', '엔딩 모으기 보상', '모으기'], ['kind', '엔딩 종류 보상', '종류'], ['story', '이야기 보상', '이야기'], ['record', '탐험과 기록 보상', '기록']];
   function skinGroup(skin) {
     const u = skin.unlock;
     if (!u) return 'base';
     if (u.admin) return 'staff';
     if (u.ending && S.endings[u.ending]) return S.endings[u.ending].story;
-    return 'reward';
+    if (u.count) return 'count';
+    if (u.kind) return 'kind';
+    if (u.story) return 'story';
+    return 'record';
+  }
+  // 보상 묶음 안에서는 같은 종류끼리 모아 쉬운 것부터 (처음부터·엔딩·운영진 계란은 적어 둔 순서 그대로)
+  const STAT_ORDER = ['plays', 'finished', 'crashes', 'choices'];
+  function skinRank(skin) {
+    const u = skin.unlock;
+    if (!u || u.admin || u.ending) return 0;
+    const need = progress(u)[1];
+    if (u.kind) return Object.keys(KIND).indexOf(u.kind) * 1e4 + need;
+    if (u.story) return S.stories.findIndex((s) => s.id === u.story) * 1e4 + need;
+    if (u.stat) return (STAT_ORDER.indexOf(u.stat) + 1) * 1e5 + need;
+    return need;
   }
   const endingArt = (e, label) => Art.ending(e.look, label || e.title);
 
@@ -227,12 +257,14 @@ window.UI = (() => {
     closet: '<path d="M16 6 a3 3 0 1 1 3 3 c-2 0 -3 1 -3 3 L4 22 H28 L16 12"/><path d="M6 22 V26 H26 V22"/>',
     help: '<circle cx="16" cy="16" r="12"/><path d="M12 12 a4 4 0 1 1 6 3.5 c-1.5 1 -2 2 -2 3.5"/><circle cx="16" cy="23" r="0.8"/>',
     credits: '<path d="M16 4 l3.5 7.5 8 1 -6 5.5 1.6 8 -7.1 -4 -7.1 4 1.6 -8 -6 -5.5 8 -1 Z"/>',
+    apps: '<rect x="5" y="5" width="9" height="9" rx="2.5"/><rect x="18" y="5" width="9" height="9" rx="2.5"/><rect x="5" y="18" width="9" height="9" rx="2.5"/><rect x="18" y="18" width="9" height="9" rx="2.5"/>',
   };
   const icon = (k) => `<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">${ICONS[k]}</svg>`;
   $('btnBook').insertAdjacentHTML('afterbegin', icon('book'));
   $('btnCloset').insertAdjacentHTML('afterbegin', icon('closet'));
   $('btnHelp').insertAdjacentHTML('afterbegin', icon('help'));
   $('btnCredits').insertAdjacentHTML('afterbegin', icon('credits'));
+  $('btnApps').insertAdjacentHTML('afterbegin', icon('apps'));
 
   function renderTitle() {
     const skin = currentSkin();
@@ -252,6 +284,18 @@ window.UI = (() => {
     $('closetTile').textContent = `${unlockedSkins().length} / ${visibleSkins().length}`;
     $('titleFoot').textContent = `${M.byline} · v${M.version}`;
   }
+
+  // ---------- 은율이의 다른 앱 ----------
+  function showApps() {
+    modal({
+      title: '은율이의 다른 앱',
+      body: '<p class="hint">누르면 새 탭에서 열려요.</p>' +
+        `<ul class="app-list">${(M.apps || []).map((a) => `<li><a class="app-link" href="${esc(a.url)}" target="_blank" rel="noopener" style="--app: ${esc(a.color)}">` +
+          `<img class="app-icon" src="${esc(a.icon)}" width="52" height="52" alt="">` +
+          `<span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></span><span class="go" aria-hidden="true">↗</span></a></li>`).join('')}</ul>`,
+    });
+  }
+  $('btnApps').addEventListener('click', () => { Sound.play('tap'); showApps(); });
 
   // ---------- 이야기 고르기 ----------
   function renderStories() {
@@ -355,11 +399,14 @@ window.UI = (() => {
   });
 
   // ---------- 계란 옷장 ----------
-  function renderCloset() {
-    const cur = currentSkin();
+  function renderClosetTop(cur) {
     $('closetEgg').innerHTML = Art.egg(cur, { mood: 'happy', label: cur.name });
     $('closetName').textContent = cur.name;
     $('closetDesc').textContent = cur.desc;
+  }
+  function renderCloset() {
+    const cur = currentSkin();
+    renderClosetTop(cur);
     const visible = visibleSkins();
     $('closetCount').textContent = `${visible.filter(isUnlocked).length} / ${visible.length}개 모음 · 엔딩을 볼수록 늘어나요`;
     const cell = (sk) => {
@@ -370,13 +417,28 @@ window.UI = (() => {
         `<span>${open ? esc(sk.name) : '???'}</span>` +
         `<span class="cond">${open ? (on ? '입는 중' : '입어 보기') : esc(condText(sk))}</span></button></li>`;
     };
-    const groups = [['staff', '운영진 전용'], ['base', '처음부터 있는 계란'], ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`]), ['reward', '모으기 보상']];
-    $('skinGrid').innerHTML = groups.map(([g, name]) => {
-      const list = visible.filter((sk) => skinGroup(sk) === g);
-      if (!list.length) return '';
-      return `<section class="skin-group" data-era="${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
-        `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`;
-    }).join('');
+    const groups = SKIN_GROUPS.map(([g, name, short]) => ({ g, name, short, list: visible.filter((sk) => skinGroup(sk) === g).sort((a, b) => skinRank(a) - skinRank(b)) }))
+      .filter((x) => x.list.length);
+    $('skinJump').innerHTML = groups.map((x) =>
+      `<button type="button" class="jump-chip" data-jump="${x.g}" data-era="${x.g}">${esc(x.short)}</button>`).join('');
+    $('skinGrid').innerHTML = groups.map(({ g, name, list }) =>
+      `<section class="skin-group" data-era="${g}" id="skins-${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
+      `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`).join('');
+  }
+  // 계란을 바꿔 입을 때는 옷장 전체를 다시 그리지 않고, 위쪽 미리 보기와 바뀐 두 칸만 고친다.
+  function wearSkin(sk) {
+    Store.set('skin', sk.id);
+    renderClosetTop(sk);
+    $('skinGrid').querySelectorAll('.skin.on').forEach((b) => {
+      b.classList.remove('on');
+      b.setAttribute('aria-pressed', 'false');
+      b.querySelector('.cond').textContent = '입어 보기';
+    });
+    const b = $('skinGrid').querySelector(`[data-skin="${sk.id}"]`);
+    if (!b) return;
+    b.classList.add('on');
+    b.setAttribute('aria-pressed', 'true');
+    b.querySelector('.cond').textContent = '입는 중';
   }
   $('skinGrid').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-skin]');
@@ -387,12 +449,16 @@ window.UI = (() => {
       toast(`아직 잠겨 있어요. <b>${esc(condText(sk))}</b>`);
       return;
     }
-    Store.set('skin', sk.id);
     Sound.play('pick');
-    renderCloset();
-    const again = $('skinGrid').querySelector(`[data-skin="${sk.id}"]`);
-    if (again) again.focus();
+    wearSkin(sk);
     if (window.App.onSkin) window.App.onSkin();
+  });
+  $('skinJump').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-jump]');
+    const sec = b && $(`skins-${b.dataset.jump}`);
+    if (!sec) return;
+    Sound.play('tap');
+    sec.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
   });
 
   // ---------- 설정 ----------

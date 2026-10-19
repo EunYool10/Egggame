@@ -1,6 +1,6 @@
 // 계란이의 모험 v3 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '3.3.1',
+  version: '3.4',
 
   // 가방에 들어가는 아이템. shield: 금이 갈 충격을 한 번 막는다 (short는 상단 표시, block은 막았을 때 문장)
   items: {
@@ -48,6 +48,7 @@ window.META = {
   // 계란 옷장: shell 껍질 색, pattern 무늬, hat 모자, unlock 해금 조건
   // unlock: null(처음부터) · { ending: 엔딩 id } · { count: 발견한 엔딩 수 또는 'all' }
   //         { story: 이야기 id } (그 이야기 엔딩 모두) · { kind: 엔딩 종류, n: 개수 } (예: 배드 엔딩 10개) · { admin: true } (운영진 계정만)
+  //         v3.4에 더한 계란 95종과 새 조건(가 본 장면 수, 플레이 기록 등)은 eggs.js에 있다.
   skins: [
     { id: 'white', name: '기본 계란', desc: '냉장고 출신의 평범한 흰 계란.', shell: '#fff6e6', unlock: null },
     { id: 'brown', name: '토종란', desc: '갈색 껍질이 단단해 보이는 시골 계란.', shell: '#e3b484', unlock: null },
@@ -119,6 +120,13 @@ window.META = {
 
   byline: '은율 · 지우 · 윤아',// 타이틀 화면 아래에 보이는 한 줄
 
+  // 타이틀의 '은율이의 다른 앱 보기'에 나오는 앱 (새 탭에서 열린다). icon: 그 앱의 파비콘(img/apps에 복사해 둠), color: 파비콘에서 딴 색
+  apps: [
+    { name: '상큼 과일 아케이드', url: 'https://eunyool10.github.io/FruitArcade/', icon: 'img/apps/fruitarcade.png', color: '#f2456f', desc: '과일 메모리, 수박 게임, 과일 자르기… 오늘의 미션에 도전하는 과일 미니게임 모음.' },
+    { name: '논리 미궁: 대우의 열쇠', url: 'https://eunyool10.github.io/LogicMaze/', icon: 'img/apps/logicmaze.svg', color: '#b8924a', desc: '원래 명제의 대우를 골라 다섯 개의 방을 탈출하는 논리 퀴즈 게임.' },
+    { name: 'SchoolFix', url: 'https://schoolfix.onrender.com/', icon: 'img/apps/schoolfix.png', color: '#1d4ed8', desc: '학교의 불편한 점과 시설 안전 문제를 신고하고 함께 고쳐 가는 서비스.' },
+  ],
+
   // 관리자(운영진) 계정: 'egggame:' + 소문자 이메일의 SHA-256 해시 (공개 저장소에 이메일을 그대로 두지 않으려고 해시만 둔다).
   // Google 로그인으로 인증된 이메일만 비교한다. 추가 방법은 README '관리자' 참고.
   admins: [
@@ -151,5 +159,5 @@ window.META = {
     { role: '특별히 고마운 분', names: ['끝까지 함께해 준 당신'] },
     { role: '특별히 고마운 분', names: ['이번 작품을 준비한 은율입니다. 플레이 해주셔서 감사합니다.'] },
   ],
-  copyright: '© 2026 계란이의 모험 · v3.3.1',
+  copyright: '© 2026 계란이의 모험 · v3.4',
 };

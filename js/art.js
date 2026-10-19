@@ -34,7 +34,7 @@ window.Art = (() => {
   const spark = (x, y, r, color, op = 1) =>
     `<path d="M${x} ${y - r} L${x + r * 0.3} ${y - r * 0.3} L${x + r} ${y} L${x + r * 0.3} ${y + r * 0.3} L${x} ${y + r} L${x - r * 0.3} ${y + r * 0.3} L${x - r} ${y} L${x - r * 0.3} ${y - r * 0.3} Z" fill="${color}" opacity="${op}"/>`;
 
-  // 껍질 무늬 (껍질 모양으로 잘라서 그린다)
+  // 껍질 무늬 (껍질 모양으로 잘라서 그린다). 무늬 함수는 스킨을 받아 색(pc)·글자(pt)를 쓸 수 있다.
   const PATTERNS = {
     speckle: () => dots([[30, 40, 3], [48, 26, 2.5], [74, 30, 3], [92, 48, 2.5], [22, 70, 2.5], [97, 76, 3], [38, 116, 3], [82, 118, 2.5], [62, 126, 2], [102, 100, 2], [18, 98, 2], [64, 16, 2], [56, 58, 2]], '#8c6a40', 0.6),
     spots: () => dots([[34, 40, 7], [82, 36, 5], [96, 92, 8], [24, 100, 6], [62, 126, 5]], '#7a4520', 0.35),
@@ -172,6 +172,7 @@ window.Art = (() => {
   };
 
   // 모자는 계란 꼭대기(y=6)에 맞춰 그렸다. 병아리 머리에는 아래로 옮겨 씌운다.
+  // 모자는 SVG 문자열이거나, 스킨을 받아 색(hc)을 쓰는 함수다.
   const HATS = {
     crown:
       '<path class="ink" d="M34 16 C30 -18 90 -18 86 16 Z" fill="#f7b9a1"/>' +
@@ -234,7 +235,7 @@ window.Art = (() => {
       dots([[33, -6, 3], [60, -16, 3.4], [87, -6, 3]], '#fff6e6', 1),
   };
   const FACE_HATS = ['glasses', 'ring']; // 꼭대기가 아닌 곳에 그리는 것 (병아리도 머리털을 그대로 둔다)
-  const HAT_DY = { glasses: -18, ring: -12 }; // 병아리에게 씌울 때 위아래로 옮기는 값 (나머지는 30)
+  const HAT_DY = { glasses: -18, ring: -12 }; // 병아리에게 씌울 때 위아래로 옮기는 값이나 transform 글자 (나머지는 30)
 
   // 엔딩 그림 소품: back은 몸 뒤에, front는 몸 앞에 그린다.
   const smallChick = (x, y) =>
@@ -363,13 +364,19 @@ window.Art = (() => {
 
   function shellLayer(skin, path) {
     const id = 'egg-clip-' + (uid += 1);
-    const pattern = skin.pattern && PATTERNS[skin.pattern] ? PATTERNS[skin.pattern]() : '';
+    const pattern = skin.pattern && PATTERNS[skin.pattern] ? PATTERNS[skin.pattern](skin) : '';
     return `<defs><clipPath id="${id}"><path d="${path}"/></clipPath></defs>` +
       `<path d="${path}" fill="${skin.shell}"/>` +
       `<g clip-path="url(#${id})">${pattern}${SHADE}</g>` +
       `<path class="ink" d="${path}" fill="none"/>`;
   }
-  const hatOf = (hat, dy = 0) => (hat && HATS[hat] ? (dy ? `<g transform="translate(0 ${dy})">${HATS[hat]}</g>` : HATS[hat]) : '');
+  // dy: 위아래로 옮기는 값, 또는 그대로 쓰는 transform 글자
+  function hatOf(hat, dy = 0, skin = {}) {
+    if (!hat || !HATS[hat]) return '';
+    const art = typeof HATS[hat] === 'function' ? HATS[hat](skin) : HATS[hat];
+    if (!dy) return art;
+    return `<g transform="${typeof dy === 'string' ? dy : `translate(0 ${dy})`}">${art}</g>`;
+  }
   const svg = (label, body) => `<svg viewBox="${VIEW}" role="img" aria-label="${esc(label)}">${body}</svg>`;
 
   function eggBody(skin, o = {}) {
@@ -377,7 +384,7 @@ window.Art = (() => {
     const n = mood === 'broken' ? CRACKS.length : Math.min(o.cracks || 0, CRACKS.length);
     return shellLayer(skin, EGG) +
       CRACKS.slice(0, n).map((d) => `<path class="ln crack" d="${d}"/>`).join('') +
-      `<g class="face">${FACES[mood]}</g>${BLUSH}` + hatOf(o.hat || skin.hat);
+      `<g class="face">${FACES[mood]}</g>${BLUSH}` + hatOf(o.hat || skin.hat, 0, skin);
   }
 
   // 껍질을 깨고 나온 병아리. 아래 껍질 조각은 스킨 색과 무늬를 따른다.
@@ -387,7 +394,7 @@ window.Art = (() => {
       '<g class="face"><circle cx="48" cy="66" r="4"/><circle cx="72" cy="66" r="4"/></g>' +
       '<path class="ink" d="M53 76 L67 76 L60 86 Z" fill="#f08a24"/>' +
       '<ellipse cx="36" cy="80" rx="6" ry="3.5" fill="#f4a19b" opacity=".8"/><ellipse cx="84" cy="80" rx="6" ry="3.5" fill="#f4a19b" opacity=".8"/>' +
-      shellLayer(skin, HALF_SHELL) + hatOf(hat, hat in HAT_DY ? HAT_DY[hat] : 30);
+      shellLayer(skin, HALF_SHELL) + hatOf(hat, hat in HAT_DY ? HAT_DY[hat] : 30, skin);
   }
 
   // 요리가 된 계란이들
@@ -720,9 +727,18 @@ window.Art = (() => {
     return `<svg viewBox="0 0 400 220" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${draw()}</svg>`;
   }
 
+  // 다른 파일(art-eggs.js)에서 무늬·모자를 덧붙인다. faceHats: 얼굴·몸통 높이에 그리는 모자, hatDy: 병아리에게 씌울 때 옮기는 값
+  function extend({ patterns = {}, hats = {}, faceHats = [], hatDy = {} } = {}) {
+    Object.assign(PATTERNS, patterns);
+    Object.assign(HATS, hats);
+    FACE_HATS.push(...faceHats);
+    Object.assign(HAT_DY, hatDy);
+  }
+
   return {
-    egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]), sceneKeys: () => Object.keys(SCENES),
+    egg, chick, ending, mystery, scene, has: (bg) => Boolean(SCENES[bg]), sceneKeys: () => Object.keys(SCENES), extend,
+    kit: { dots, spark, flake, esc }, // 덧붙이는 그림에서 같이 쓰는 도구
     // 점검용: 쓸 수 있는 무늬·모자·소품·요리 그림 이름
-    names: { patterns: Object.keys(PATTERNS), hats: Object.keys(HATS), props: Object.keys(PROPS), foods: Object.keys(FOODS) },
+    get names() { return { patterns: Object.keys(PATTERNS), hats: Object.keys(HATS), props: Object.keys(PROPS), foods: Object.keys(FOODS) }; },
   };
 })();
