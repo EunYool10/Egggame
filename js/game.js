@@ -32,9 +32,39 @@
       story: s.id, node: s.first, from: null, t: s.startTemp, c: 0, steps: 0, bag: [], friends: [], flags: [], vars: {},
       say: null, notes: [], log: [], bg: s.bg, hist: [],
       seed: Math.floor(Math.random() * 2147483646) + 1, used: [], event: null,
+      route: makeRoute(s), path: [],
     };
   }
   const story = () => UI.storyOf(st.story);
+
+  // ---------- 무작위 길 ----------
+  // 이야기의 route.tiers에서 구역마다 몇 곳을 무작위로 골라 섞는다. 앞 구역 → 뒤 구역 순서는 지킨다.
+  const NEXT = '>';
+  function makeRoute(s) {
+    const r = s.route;
+    if (!r) return [];
+    return r.tiers.flatMap((tier, k) => {
+      const [lo, hi] = (r.pick && r.pick[k]) || [1, 1];
+      const list = [...tier];
+      for (let i = list.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+      return list.slice(0, lo + Math.floor(Math.random() * (hi - lo + 1)));
+    });
+  }
+  const tierOf = (id) => { const r = story().route; return r ? r.tiers.findIndex((t) => t.includes(id)) : -1; };
+  // 다음 정거장: 길 위의 장면이면 그다음 곳, 길 밖(출발 장면, 고정된 선택으로 온 곳)이면 같거나 뒤 구역의 첫 곳.
+  // 이번 모험에서 이미 지나온 곳은 건너뛰고, 다 지나면 route.end로 간다.
+  function nextStop(node = st.node) {
+    const r = story().route;
+    if (!r) return null;
+    const route = st.route || [];
+    const i = route.indexOf(node);
+    const ahead = i >= 0 ? route.slice(i + 1) : route.filter((id) => tierOf(id) >= tierOf(node));
+    return ahead.find((id) => id !== node && !(st.path || []).includes(id)) || r.end;
+  }
+  const resolve = (to) => (to === NEXT ? nextStop() : to);
 
   // 모험마다 선택지 순서를 섞는다. 같은 모험 안에서는 늘 같은 순서 (이어하기·되돌리기에도 그대로).
   function orderOf(node) {
@@ -214,12 +244,12 @@
   }
 
   // 선택지가 실제로 가는 곳 (조건을 채우면 alt의 to)
-  const targetOf = (ch) => (ch.alt && meets(ch.alt.need) && ch.alt.to) || ch.to;
+  const targetOf = (ch) => resolve((ch.alt && meets(ch.alt.need) && ch.alt.to) || ch.to);
   const seen = (id) => (S.endings[id] ? Boolean(Store.book.endings[id]) : Boolean(S.scenes[id] && !S.scenes[id].branch && Store.book.scenes[id]));
 
   // 관리자 '선택지 결과 미리 보기': 어디로 가고 무엇이 바뀌는지 한 줄로
   function peekLine(ch) {
-    const where = (id) => (S.endings[id] ? `엔딩 「${S.endings[id].title}」` : S.scenes[id] && S.scenes[id].branch ? '둥지(상태로 결정)' : S.scenes[id] ? S.scenes[id].place : id);
+    const where = (to) => { const id = resolve(to); return (to === NEXT ? '다음 정거장 · ' : '') + (S.endings[id] ? `엔딩 「${S.endings[id].title}」` : S.scenes[id] && S.scenes[id].branch ? '둥지(상태로 결정)' : S.scenes[id] ? S.scenes[id].place : id); };
     const fxText = (r) => {
       const out = [];
       const fx = r.fx || {};
@@ -373,7 +403,7 @@
     st.notes = notes;
     if (sound) Sound.play(sound);
 
-    let next = st.c >= MAX_CRACK ? story().crash : o.to;
+    let next = st.c >= MAX_CRACK ? story().crash : resolve(o.to);
     while (S.scenes[next] && S.scenes[next].branch) next = S.scenes[next].branch(st, story());
     st.event = null;
     const nextScene = S.scenes[next];
@@ -389,6 +419,8 @@
       renderEnding(record);
     } else {
       running = true;
+      if (!st.path) st.path = [];
+      if (!st.path.includes(id)) st.path.push(id);
       Store.markScene(id);
       renderScene();
       save();
@@ -464,6 +496,8 @@
     skinsBefore = openSkins();
     st = { ...fresh(UI.runStory(run)), ...run, story: UI.runStory(run), hist: Array.isArray(run.hist) ? run.hist : [] };
     st.notes = (st.notes || []).map(({ float, ...n }) => n);
+    if (!Array.isArray(st.route)) st.route = makeRoute(story());
+    if (!Array.isArray(st.path)) st.path = [st.node];
     shownBg = null;
     Sound.play('pick');
     go(st.node);
