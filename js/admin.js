@@ -354,7 +354,12 @@ window.Admin = (() => {
         return;
       // 그림
       case 'gtab': galleryTab = v; break;
-      case 'wear': Store.set('skin', id); UI.toast(`<b>${esc(M.skins.find((k) => k.id === id).name)}</b>를 입었어요.`); break;
+      case 'wear': {
+        const sk = M.skins.find((k) => k.id === id);
+        Store.set('skin', id);
+        UI.toast(UI.isUnlocked(sk) ? `<b>${esc(sk.name)}</b>${UI.particle(sk.name, '을', '를')} 입었어요.` : `<b>${esc(sk.name)}</b>${UI.particle(sk.name, '은', '는')} 지금 잠겨 있어요. '일반 플레이어로 보기'를 끄면 보여요.`);
+        break;
+      }
       // 미니게임
       case 'level': Store.set('difficulty', v); break;
       case 'practice': Minigames.run(Minigames.SAMPLES[id], (win) => UI.toast(`${esc(Minigames.TYPES[id].name)} 연습: <b>${win ? '성공' : '실패'}</b>`)); return;

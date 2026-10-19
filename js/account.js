@@ -22,6 +22,9 @@ window.Account = (() => {
     appId: '1:116251064951:web:d6c689bc33d9e85015e472',
   };
   const LAST_UID = 'egg2:uid'; // 이 기기에서 마지막으로 로그인한 계정 (다음 방문에 바로 그 기록을 보여 준다)
+  // 마지막 로그인이 관리자 계정이었는지. 다음 방문에 Firebase를 불러오는 동안에도 관리자 화면(운영진 계란 등)을 바로 보여 준다.
+  // 관리자 확인은 원래 화면에서만 하는 것이라(isAdmin), 로그인 확인이 끝나면 다시 정확히 맞춘다.
+  const ADMIN_UID = 'egg2:admin-uid';
   const RUN_LIMIT = 40000; // firestore.rules의 run 길이 제한과 같다
   const SCENE_LIMIT = 60; // firestore.rules의 scenes 개수 제한과 같다
   const SYNC_TEXT = { saving: '저장 중…', saved: '계정에 저장됨', error: '저장 실패 · 잠시 뒤 다시 시도해요' };
@@ -35,9 +38,20 @@ window.Account = (() => {
   let greet = false; // 직접 로그인 버튼을 눌렀을 때만 인사한다
   let timer = 0;
 
-  const lastUid = {
-    get() { try { return localStorage.getItem(LAST_UID); } catch (e) { return null; } },
-    set(uid) { try { if (uid) localStorage.setItem(LAST_UID, uid); else localStorage.removeItem(LAST_UID); } catch (e) { /* 저장 불가 */ } },
+  const remember = (key) => ({
+    get() { try { return localStorage.getItem(key); } catch (e) { return null; } },
+    set(v) { try { if (v) localStorage.setItem(key, v); else localStorage.removeItem(key); } catch (e) { /* 저장 불가 */ } },
+  });
+  const lastUid = remember(LAST_UID);
+  const adminUid = remember(ADMIN_UID);
+  // 관리자 뷰어 옵션 (admin.js가 아직 안 불렸을 수도 있어 저장된 값을 직접 읽는다)
+  const adminOpts = () => {
+    if (window.App.adminOpts) return window.App.adminOpts;
+    try { return JSON.parse(localStorage.getItem('egg2:admin') || '{}') || {}; } catch (e) { return {}; }
+  };
+  const setAdmin = (on) => {
+    window.App.adminAccount = on;
+    window.App.admin = on && !adminOpts().player;
   };
   const nameOf = (u) => u.displayName || (u.email ? u.email.split('@')[0] : '플레이어');
 
@@ -127,11 +141,11 @@ window.Account = (() => {
   // ---------- 로그인 상태 ----------
   async function onUser(u) {
     user = u;
-    window.App.adminAccount = false;
-    window.App.admin = false;
+    setAdmin(false);
     ready = false;
     if (!u) {
       lastUid.set(null);
+      adminUid.set(null);
       Store.useProfile('guest');
       setState('guest');
       refresh();
@@ -141,8 +155,9 @@ window.Account = (() => {
     Store.useProfile(u.uid);
     setState('user');
     // adminAccount: 관리자 계정인지, admin: 지금 관리자 권한을 쓰는지 (관리자 뷰어의 '일반 플레이어로 보기'로 끌 수 있다)
-    window.App.adminAccount = await isAdmin(u);
-    window.App.admin = window.App.adminAccount && !(window.App.adminOpts && window.App.adminOpts.player);
+    const admin = await isAdmin(u);
+    setAdmin(admin);
+    adminUid.set(admin ? u.uid : null);
     await pull();
     refresh();
     if (greet) {
@@ -212,7 +227,8 @@ window.Account = (() => {
       }
       Store.replaceBook(book);
       Store.replaceRun(run);
-      if (cloud && cloud.skin && M.skins.some((k) => k.id === cloud.skin)) Store.settings.skin = cloud.skin;
+      // 계정에 입혀 둔 계란을 이 기기 설정에도 저장한다 (다음 방문에 바로 보이게)
+      if (cloud && cloud.skin && M.skins.some((k) => k.id === cloud.skin)) Store.set('skin', cloud.skin);
       ready = true;
       await push();
     } catch (err) {
@@ -228,7 +244,9 @@ window.Account = (() => {
     clearTimeout(timer);
     setSync('saving');
     const data = { book: toCloud(Store.book), run: runJson(Store.loadRun()), updatedAt: fb.F.serverTimestamp() };
-    if (M.skins.some((k) => k.id === Store.settings.skin)) data.skin = Store.settings.skin;
+    // 기기 설정은 계정마다 따로가 아니라서, 운영진 전용 계란은 관리자 계정에만 올린다.
+    const worn = M.skins.find((k) => k.id === Store.settings.skin);
+    if (worn && (!UI.staffOnly(worn) || window.App.adminAccount)) data.skin = worn.id;
     try {
       await fb.F.setDoc(fb.F.doc(fb.db, 'players', user.uid), data);
       setSync('saved');
@@ -290,6 +308,7 @@ window.Account = (() => {
   const last = lastUid.get();
   if (last) {
     Store.useProfile(last);
+    if (adminUid.get() === last) setAdmin(true);
     setState('loading');
     load().catch(() => setState('guest'));
   } else {

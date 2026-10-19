@@ -421,6 +421,7 @@
     const run = Store.loadRun();
     if (!run || !S.scenes[run.node]) { UI.show('stories'); return; }
     st = { ...fresh(UI.runStory(run)), ...run, story: UI.runStory(run), hist: Array.isArray(run.hist) ? run.hist : [] };
+    st.notes = (st.notes || []).map(({ float, ...n }) => n);
     shownBg = null;
     Sound.play('pick');
     go(st.node);
@@ -624,7 +625,11 @@
   document.addEventListener('keydown', (ev) => {
     if (ev.altKey || ev.ctrlKey || ev.metaKey) return;
     const k = ev.key;
-    if (Minigames.active) { Minigames.key(ev); return; }
+    if (Minigames.active) {
+      if (k === 'Tab') UI.trapFocus(ev, document.querySelector('#minigame .sheet'));
+      else Minigames.key(ev);
+      return;
+    }
     if (UI.modalOpen) {
       if (k === 'Escape') UI.closeModal();
       else if (k === 'Tab') UI.trapFocus(ev, document.querySelector('#modal .sheet'));

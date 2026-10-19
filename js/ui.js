@@ -11,6 +11,12 @@ window.UI = (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]);
   const pad = (n) => String(n).padStart(2, '0');
+  // 받침이 있으면 withB, 없으면 without: particle('토종란', '을', '를') → '을'
+  const particle = (word, withB, without) => {
+    const w = String(word);
+    const code = w.charCodeAt(w.length - 1) - 0xac00;
+    return code >= 0 && code < 11172 && code % 28 ? withB : without;
+  };
   const KIND = { true: '진엔딩', happy: '해피 엔딩', normal: '노멀 엔딩', hidden: '히든 엔딩', bad: '배드 엔딩' };
   const endIds = Object.keys(S.endings);
   const SCREENS = ['title', 'stories', 'play', 'end', 'book', 'closet', 'settings', 'credits', 'admin'];
@@ -232,7 +238,7 @@ window.UI = (() => {
     const skin = currentSkin();
     $('titleBackdrop').innerHTML = S.stories.map((s, i) => `<div class="backdrop era-${s.id}" style="--i:${i}">${Art.scene(s.bg)}</div>`).join('');
     $('titleBackdrop').style.setProperty('--n', S.stories.length);
-    $('titleEgg').innerHTML = Art.egg(skin, { mood: 'happy', label: `${skin.name}를 입은 계란이` });
+    $('titleEgg').innerHTML = Art.egg(skin, { mood: 'happy', label: `${skin.name}${particle(skin.name, '을', '를')} 입은 계란이` });
     const run = Store.loadRun();
     const scene = run && S.scenes[run.node];
     $('btnContinue').hidden = !scene;
@@ -354,7 +360,8 @@ window.UI = (() => {
     $('closetEgg').innerHTML = Art.egg(cur, { mood: 'happy', label: cur.name });
     $('closetName').textContent = cur.name;
     $('closetDesc').textContent = cur.desc;
-    $('closetCount').textContent = `${unlockedSkins().length} / ${visibleSkins().length}개 모음 · 엔딩을 볼수록 늘어나요`;
+    const visible = visibleSkins();
+    $('closetCount').textContent = `${visible.filter(isUnlocked).length} / ${visible.length}개 모음 · 엔딩을 볼수록 늘어나요`;
     const cell = (sk) => {
       const open = isUnlocked(sk);
       const on = sk.id === cur.id;
@@ -365,7 +372,7 @@ window.UI = (() => {
     };
     const groups = [['staff', '운영진 전용'], ['base', '처음부터 있는 계란'], ...S.stories.map((s) => [s.id, `${s.era} 엔딩 계란`]), ['reward', '모으기 보상']];
     $('skinGrid').innerHTML = groups.map(([g, name]) => {
-      const list = visibleSkins().filter((sk) => skinGroup(sk) === g);
+      const list = visible.filter((sk) => skinGroup(sk) === g);
       if (!list.length) return '';
       return `<section class="skin-group" data-era="${g}"><h3>${name} <small>${list.filter(isUnlocked).length} / ${list.length}</small></h3>` +
         `<ul class="skin-grid">${list.map(cell).join('')}</ul></section>`;
@@ -478,12 +485,12 @@ window.UI = (() => {
   document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { Sound.play('tap'); back(); }));
 
   return {
-    KIND, esc, pad, endIds,
+    KIND, esc, pad, particle, endIds,
     get current() { return current; },
     get modalOpen() { return !$('modal').hidden; },
     set bookTab(id) { if (S.byId[id]) bookTab = id; },
     show, back, toast, modal, closeModal, confirmBox, trapFocus, applySettings, reduceMotion, help, storyCard,
-    isUnlocked, unlockedSkins, visibleSkins, currentSkin, endingArt, seenCount, storyOf, storyLabel, endingNo, runStory,
+    isUnlocked, unlockedSkins, visibleSkins, staffOnly, currentSkin, endingArt, seenCount, storyOf, storyLabel, endingNo, runStory,
     condText, endingDetail,
   };
 })();

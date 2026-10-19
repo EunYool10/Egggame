@@ -34,10 +34,22 @@ window.Store = (() => {
   function emptyBook() {
     return { endings: {}, scenes: {}, stats: { plays: 0, finished: 0, crashes: 0, choices: 0, bestTrue: null } };
   }
+  // 엔딩 기록 하나 { n: 본 횟수, first: 처음 본 때 }. 숫자만 있는 값(계정 저장 형식)이나 망가진 값도 바로잡는다.
+  function endingRec(v) {
+    if (typeof v === 'number') return { n: Math.max(1, Math.round(v) || 1), first: Date.now() };
+    if (!v || typeof v !== 'object') return null;
+    return { n: Math.max(1, Math.round(Number(v.n)) || 1), first: Number(v.first) || Date.now() };
+  }
   function normalize(saved) {
     const base = emptyBook();
     if (!saved || typeof saved !== 'object') return base;
-    return { endings: { ...(saved.endings || {}) }, scenes: { ...(saved.scenes || {}) }, stats: { ...base.stats, ...(saved.stats || {}) } };
+    const endings = {};
+    Object.entries(saved.endings || {}).forEach(([id, v]) => { const r = endingRec(v); if (r) endings[id] = r; });
+    const src = saved.stats || {};
+    const stats = { ...base.stats };
+    ['plays', 'finished', 'crashes', 'choices'].forEach((k) => { stats[k] = Math.max(0, Math.round(Number(src[k])) || 0); });
+    stats.bestTrue = src.bestTrue == null || !Number.isFinite(Number(src.bestTrue)) ? null : Math.max(1, Math.round(Number(src.bestTrue)));
+    return { endings, scenes: { ...(saved.scenes || {}) }, stats };
   }
   // v1에서 본 엔딩은 게스트 도감으로 이어받는다.
   function withV1(book) {
