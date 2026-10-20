@@ -404,6 +404,8 @@
     if (sound) Sound.play(sound);
 
     let next = st.c >= MAX_CRACK ? story().crash : resolve(o.to);
+    // 무작위 길에서 이미 지나온 곳으로 가는 고정 선택은 다음 정거장으로 넘긴다 (같은 장면을 두 번 보지 않게)
+    if (S.scenes[next] && !S.scenes[next].branch && (st.path || []).includes(next) && story().route) next = nextStop();
     while (S.scenes[next] && S.scenes[next].branch) next = S.scenes[next].branch(st, story());
     st.event = null;
     const nextScene = S.scenes[next];

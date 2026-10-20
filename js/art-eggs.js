@@ -382,3 +382,81 @@
 
   window.Art.extend({ patterns, hats });
 })();
+
+// ── v3.7에 더한 무늬와 모자 ──
+(() => {
+  'use strict';
+
+  const { dots, spark } = window.Art.kit;
+  const each = (list, f) => list.map(f).join('');
+  const line = (d, color, w = 2.5, op = 1) =>
+    `<path d="${d}" stroke="${color}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>`;
+  const blob = (x, y, r, color, op, turn = 0) =>
+    `<path d="M${x - r} ${y} C${x - r} ${y - r} ${x + r * 0.4} ${y - r * 1.1} ${x + r} ${y - r * 0.2} C${x + r * 1.2} ${y + r * 0.6} ${x + r * 0.2} ${y + r} ${x - r * 0.4} ${y + r * 0.8} C${x - r * 0.9} ${y + r * 0.6} ${x - r} ${y + r * 0.3} ${x - r} ${y} Z" fill="${color}" opacity="${op}" transform="rotate(${turn} ${x} ${y})"/>`;
+  const SPOTS = [[26, 40, 7], [84, 30, 6], [100, 92, 8], [20, 104, 6], [60, 126, 7], [56, 54, 4], [106, 60, 4], [38, 122, 4]];
+  const petal = (x, y, a) => {
+    const px = (x + 5.5 * Math.cos((a * Math.PI) / 180)).toFixed(1);
+    const py = (y + 5.5 * Math.sin((a * Math.PI) / 180)).toFixed(1);
+    return `<ellipse cx="${px}" cy="${py}" rx="3.4" ry="1.8" fill="#ffffff" transform="rotate(${a} ${px} ${py})"/>`;
+  };
+  const ray = (x, y, a, r) => `M${x} ${y} l${(r * Math.cos((a * Math.PI) / 180)).toFixed(1)} ${(r * Math.sin((a * Math.PI) / 180)).toFixed(1)} `;
+  const EIGHT = [0, 45, 90, 135, 180, 225, 270, 315];
+
+  const patterns = {
+    dalmatian: () => each(SPOTS, ([x, y, r], i) => blob(x, y, r, '#2b2b2b', 0.85, i * 40)),
+    cow: () => each([[24, 44, 13], [92, 36, 11], [98, 108, 12], [26, 116, 10]], ([x, y, r], i) => blob(x, y, r, '#3b2f2a', 0.85, i * 70)),
+    leopard: () => each(SPOTS, ([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r * 0.75}" fill="#c98a3a" opacity=".55"/>` +
+      `<path d="M${x - r} ${y} a${r} ${r} 0 0 1 ${r * 1.6} ${-r * 0.6}" stroke="#3b2f2a" stroke-width="2.4" fill="none" opacity=".8"/>`),
+    zebra: () => line('M4 30 q14 8 28 0 M2 54 q18 9 32 0 M4 118 q14 9 28 2 M116 32 q-14 8 -28 0 M118 56 q-18 9 -32 0 M116 120 q-14 9 -28 2 M44 12 q16 10 32 0', '#2b2b2b', 5.5),
+    giraffe: () => each([[26, 36], [56, 22], [88, 34], [104, 70], [16, 74], [24, 112], [58, 128], [96, 116]], ([x, y], i) =>
+      `<rect x="${x - 10}" y="${y - 8}" width="20" height="16" rx="5" fill="#b8692c" opacity=".7" transform="rotate(${i * 23} ${x} ${y})"/>`),
+    camo: (k) => each([[24, 40, 12, 0], [84, 30, 10, 1], [100, 96, 12, 2], [22, 108, 11, 1], [62, 128, 12, 0], [58, 52, 7, 2]], ([x, y, r, c], i) =>
+      blob(x, y, r, [k.pc || '#5f7a3a', '#8a7a4a', '#3f5a2a'][c], 0.7, i * 50)),
+    denim: () => '<rect x="-4" y="-4" width="128" height="150" fill="#3f6fa8" opacity=".25"/>' +
+      '<path d="M14 112 Q60 122 106 112" stroke="#e0b030" stroke-width="1.6" fill="none" stroke-dasharray="3 3"/>' +
+      '<rect x="78" y="22" width="22" height="22" rx="3" fill="none" stroke="#e0b030" stroke-width="1.6" stroke-dasharray="3 3"/>',
+    argyle: (k) => each([[20, 30], [60, 30], [100, 30], [40, 118], [80, 118]], ([x, y]) =>
+      `<path d="M${x} ${y - 14} L${x + 12} ${y} L${x} ${y + 14} L${x - 12} ${y} Z" fill="${k.pc || '#7b55b8'}" opacity=".45"/>`) +
+      line('M0 16 L40 58 M40 16 L0 58 M40 16 L80 58 M80 16 L40 58 M80 16 L120 58 M120 16 L80 58', '#ffffff', 1.4, 0.7),
+    daisy: () => each([[28, 40], [86, 32], [98, 102], [22, 108], [60, 126]], ([x, y]) =>
+      each(EIGHT, (a) => petal(x, y, a)) + `<circle cx="${x}" cy="${y}" r="2.6" fill="#ffc233"/>`),
+    fireworks: () => each([[30, 38, '#ff8a8a'], [88, 30, '#ffd34d'], [96, 104, '#86c5ff'], [24, 112, '#c3a2ff']], ([x, y, c]) =>
+      line(each(EIGHT, (a) => ray(x, y, a, 9)), c, 2.2, 0.9) + `<circle cx="${x}" cy="${y}" r="2" fill="${c}"/>`),
+    bats: () => each([[28, 40, -10], [86, 30, 12], [100, 100, -8], [22, 110, 15]], ([x, y, r]) =>
+      `<path d="M${x} ${y} q-5 -6 -12 -2 q4 2 3 6 q4 -3 9 -1 q5 -2 9 1 q-1 -4 3 -6 q-7 -4 -12 2 Z" fill="#3b2f2a" opacity=".8" transform="rotate(${r} ${x} ${y})"/>`) +
+      '<path d="M84 120 a14 14 0 1 0 14 14 a10 10 0 1 1 -14 -14 Z" fill="#ffd34d" opacity=".8"/>',
+    lights: () => line('M-4 30 Q30 50 60 34 T124 34 M-4 116 Q30 136 60 120 T124 120', '#3f6b2c', 1.8, 0.8) +
+      each([[10, 38, '#ff6b6b'], [30, 42, '#ffd34d'], [52, 36, '#6fd39a'], [76, 34, '#6fa8e0'], [100, 38, '#ff6b6b'], [10, 124, '#6fa8e0'], [32, 128, '#ffd34d'], [56, 122, '#ff6b6b'], [80, 120, '#6fd39a'], [104, 124, '#ffd34d']], ([x, y, c]) =>
+        `<ellipse cx="${x}" cy="${y + 4}" rx="3" ry="4.5" fill="${c}"/>`),
+    pumpkin: () => line('M30 10 Q12 70 30 136 M48 8 Q40 70 48 138 M72 8 Q80 70 72 138 M90 10 Q108 70 90 136', '#d9741c', 2.4, 0.6),
+    mintchoco: () => each([[28, 36], [52, 24], [84, 30], [100, 56], [18, 66], [104, 92], [20, 100], [36, 124], [62, 130], [88, 120], [58, 50], [74, 58]], ([x, y], i) =>
+      `<rect x="${x - 3}" y="${y - 2}" width="6" height="4" rx="1" fill="#5a3a22" transform="rotate(${i * 33} ${x} ${y})"/>`),
+    chocodrip: () => '<path d="M-4 -4 H124 V30 q-6 12 -12 0 q-8 18 -16 0 q-6 10 -12 0 q-8 16 -16 0 q-6 12 -12 0 q-8 18 -16 0 q-6 10 -12 0 q-8 14 -16 0 Z" fill="#6b4a32"/>' +
+      dots([[30, 12, 1.6], [52, 20, 1.6], [76, 10, 1.6], [92, 22, 1.6]], '#ffffff', 0.9),
+    nori: () => '<rect x="-4" y="104" width="128" height="40" fill="#2f3a2a"/>' + dots([[30, 30, 2], [50, 22, 2], [74, 26, 2], [90, 40, 2], [24, 52, 2], [98, 64, 2]], '#ffffff', 0.9) +
+      '<circle cx="60" cy="124" r="7" fill="#ff8a5a"/><circle cx="60" cy="124" r="3" fill="#ffd34d"/>',
+    hexagon: (k) => each([[24, 36], [48, 24], [72, 24], [96, 36], [24, 116], [48, 128], [72, 128], [96, 116]], ([x, y]) =>
+      `<path d="M${x - 9} ${y} L${x - 4.5} ${y - 8} L${x + 4.5} ${y - 8} L${x + 9} ${y} L${x + 4.5} ${y + 8} L${x - 4.5} ${y + 8} Z" fill="none" stroke="${k.pc || '#e0a812'}" stroke-width="2" opacity=".75"/>`),
+    sparkles2: (k) => each([[26, 36, 6], [84, 28, 7], [100, 96, 6], [20, 106, 5], [62, 128, 6], [56, 52, 4], [104, 64, 4]], ([x, y, r]) => spark(x, y, r, k.pc || '#ffffff', 0.95)),
+  };
+
+  const hats = {
+    cap2: (k) => `<path class="ink" d="M84 14 L112 8 L114 17 L86 22 Z" fill="${k.hc || '#3f8fd0'}"/>` +
+      `<path class="ink" d="M30 22 C30 -6 90 -6 90 22 Z" fill="${k.hc || '#3f8fd0'}"/>` +
+      '<path d="M60 -2 V22" stroke="#000" stroke-width="1.6" opacity=".2"/><circle class="ink" cx="60" cy="-2" r="3" fill="#ffffff"/>',
+    beret2: (k) => `<ellipse class="ink" cx="58" cy="8" rx="36" ry="11" fill="${k.hc || '#7b55b8'}" transform="rotate(-8 58 8)"/>` + '<path class="ln" d="M58 -3 L61 -11"/>',
+    crown2: (k) => `<path class="ink" d="M34 18 L36 -4 L48 8 L60 -10 L72 8 L84 -4 L86 18 Z" fill="${k.hc || '#ffd34d'}"/>` +
+      dots([[36, -4, 2.6], [60, -10, 3], [84, -4, 2.6]], '#ffffff', 1),
+    antlers: line('M44 10 C38 -2 30 -8 26 -20 M34 -4 L24 -6 M40 10 C40 -4 46 -10 42 -22 M76 10 C82 -2 90 -8 94 -20 M86 -4 L96 -6 M80 10 C80 -4 74 -10 78 -22', '#8a5a36', 4),
+    stem: '<path class="ink" d="M57 8 C56 0 58 -6 62 -10 L66 -8 C63 -4 62 2 63 8 Z" fill="#6b8a3a"/><path class="ink" d="M64 -6 C72 -12 82 -8 82 -2 C74 -2 68 -2 64 -6 Z" fill="#7cc46a"/>',
+    propeller: '<path class="ink" d="M32 20 C32 -6 88 -6 88 20 Z" fill="#ffd34d"/><path d="M32 12 H88" stroke="#e05a47" stroke-width="5"/>' +
+      '<path class="ln thin" d="M60 -4 V-12"/><ellipse class="ink" cx="48" cy="-13" rx="12" ry="3" fill="#6fa8e0"/><ellipse class="ink" cx="72" cy="-13" rx="12" ry="3" fill="#e05a47"/>',
+    helmet: (k) => `<path class="ink" d="M26 22 C24 -12 96 -12 94 22 Z" fill="${k.hc || '#e05a47'}"/>` +
+      '<path d="M44 -2 L48 18 M60 -6 V20 M76 -2 L72 18" stroke="#ffffff" stroke-width="3" opacity=".6"/>',
+    mushroom: '<path class="ink" d="M24 20 C22 -16 98 -16 96 20 Z" fill="#e0392b"/>' + dots([[40, 4, 5], [62, -4, 6], [82, 8, 5], [52, 14, 3]], '#ffffff', 1),
+    ribbon2: (k) => `<path class="ink" d="M60 6 C46 -12 28 -8 32 7 C35 18 50 14 60 6 Z" fill="${k.hc || '#6fa8e0'}"/>` +
+      `<path class="ink" d="M60 6 C74 -12 92 -8 88 7 C85 18 70 14 60 6 Z" fill="${k.hc || '#6fa8e0'}"/><circle class="ink" cx="60" cy="6" r="6" fill="${k.hc || '#6fa8e0'}"/>`,
+  };
+
+  window.Art.extend({ patterns, hats });
+})();

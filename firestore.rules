@@ -71,9 +71,11 @@ service cloud.firestore {
 
     function sceneIds() {
       return ['start', 'elder', 'swap', 'kitchen', 'living', 'ondol', 'cat', 'basket', 'roof', 'market',
-        'truck', 'yard', 'dog', 'alley', 'farm', 'stream', 'field', 'storm', 'collect', 'hatchery', 'g_start',
-        'g_box', 'g_pine', 'g_kiln', 'g_smithy', 'g_port', 'g_river', 'g_pass', 'g_gyerim', 'g_frost',
-        'f_start', 'f_corridor', 'f_engine', 'f_garden', 'f_window', 'f_pod', 'f_mars', 'f_dust'];
+        'truck', 'yard', 'dog', 'alley', 'm_bath', 'm_attic', 'm_playground', 'm_bakery', 'farm', 'stream',
+        'field', 'storm', 'collect', 'hatchery', 'g_start', 'g_box', 'g_pine', 'g_kiln', 'g_smithy',
+        'g_market', 'g_well', 'g_port', 'g_river', 'g_pass', 'g_bamboo', 'g_cave', 'g_gyerim', 'g_frost',
+        'f_start', 'f_corridor', 'f_engine', 'f_garden', 'f_lab', 'f_gym', 'f_galley', 'f_medbay', 'f_window',
+        'f_pod', 'f_mars', 'f_dust'];
     }
 
     // Skin ids are only checked for shape (lowercase letters, digits and hyphens, up to 32 chars).
