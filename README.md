@@ -35,7 +35,7 @@ Node.js가 있다면 `npm start`로 http://localhost:3000 에서 띄울 수도 �
 | 애니메이션 | CSS Animation · requestAnimationFrame (미니게임) |
 | 사운드 | Web Audio API, 효과음과 배경 음악 실시간 합성 |
 | 저장 | Web Storage API (localStorage) |
-| 웹 API | Clipboard API (결과 복사) · Vibration API (진동) |
+| 웹 API | Web Share API · Clipboard API (결과 공유) · Vibration API (진동) |
 | 글꼴 | Google Fonts (Jua · Gowun Batang · Gowun Dodum, SIL Open Font License) |
 | 서버 | Node.js 내장 http 모듈, 외부 패키지 없음 |
 | 배포 | GitHub · Render |
@@ -134,7 +134,7 @@ Render 대시보드 → New + → Blueprint → `EunYool10/Egggame` → Apply. `
 - 계란 옷장: 스킨 199종 (껍질 색, 무늬, 모자). 처음부터 23종이 있고, 엔딩 49개마다 계란이 하나씩 열립니다. 보상 계란은 엔딩 모으기(1~45개·전부), 엔딩 종류(진·해피·노멀·히든·배드 엔딩 n개), 이야기(시대별 엔딩 n개·전부), 탐험과 기록(가 본 장면 수, 모험 횟수, 엔딩 본 횟수, 와장창 횟수, 선택 횟수)으로 열립니다. 옷장 위 바로 가기로 묶음 사이를 오갈 수 있습니다.
 - 은율이의 다른 앱 보기: 타이틀에서 상큼 과일 아케이드 존 · 논리 미궁: 대우의 열쇠 · SchoolFix를 새 탭으로 엽니다. 카드는 각 앱의 파비콘 아이콘과 색으로 꾸몄습니다.
 - 설정 (화면 · 소리와 진동 · 게임으로 묶음): 글자 속도·크기, 테마, 움직임 줄이기, 효과음·배경 음악·음량, 진동, 미니게임 난이도, 데이터 초기화
-- 제작 크레딧 화면, 결과 복사
+- 제작 크레딧 화면, 결과 공유 (휴대폰은 공유 창, 그 밖에는 복사)
 - 키보드: `A`·`B`·`C` 또는 `1`·`2`·`3`으로 선택, `Space`·`Enter`로 글 넘기기, `Esc`로 메뉴
 - 소리는 모두 Web Audio로 합성하고, 계란이와 배경 그림은 코드(SVG)로 그립니다.
 - 기록은 브라우저 localStorage에 저장됩니다. v1·v2에서 본 엔딩과 이어하기는 그대로 이어집니다.

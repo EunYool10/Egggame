@@ -151,8 +151,9 @@
   function chipsHTML(notes) {
     return (notes || []).map((n) => `<span class="chip ${n.cls}">${esc(n.text)}</span>`).join('');
   }
-  function setSay(el) {
-    const ev = st.event;
+  // withEvent: 오늘은·길 위에서 문구도 함께 (엔딩 화면에서는 빼고 결과만)
+  function setSay(el, withEvent = true) {
+    const ev = withEvent ? st.event : null;
     el.hidden = !st.say && !st.notes.length && !ev;
     el.innerHTML = (st.say ? `<span>${esc(st.say)}</span>` : '') + chipsHTML(st.notes) +
       (ev ? `<span class="event"><b>${ev.kind === 'open' ? '오늘은' : '길 위에서'}</b> ${esc(ev.text)}${ev.t ? ` <span class="chip ${ev.t > 0 ? 'warm' : 'cold'}">온기 ${ev.t > 0 ? '+' : ''}${ev.t}℃</span>` : ''}</span>` : '');
@@ -534,7 +535,7 @@
     const art = $('endArt');
     art.innerHTML = UI.endingArt(e);
     animateEgg(art, e.kind === 'bad');
-    setSay($('endSay'));
+    setSay($('endSay'), false);
     $('endText').innerHTML = lines(e.text).map((p) => `<p>${esc(p)}</p>`).join('');
 
     const box = $('endUnlocks');
@@ -590,18 +591,27 @@
       `엔딩 도감 ${UI.seenCount()}/${UI.endIds.length} 달성!`;
     const fallback = () => {
       const body = UI.modal({
-        title: '결과 복사',
+        title: '결과 공유',
         body: `<p>아래 글을 선택해서 복사하세요.</p><textarea class="share-text" id="shareText" rows="5" readonly>${esc(text)}</textarea>`,
       });
       const ta = body.querySelector('textarea');
       ta.focus();
       ta.select();
     };
-    try {
-      navigator.clipboard.writeText(text).then(() => UI.toast('결과를 복사했어요. 친구에게 붙여 넣어 자랑해 보세요!'), fallback);
-    } catch (err) {
-      fallback();
+    const copy = () => {
+      try {
+        navigator.clipboard.writeText(text).then(() => UI.toast('결과를 복사했어요. 친구에게 붙여 넣어 자랑해 보세요!'), fallback);
+      } catch (err) {
+        fallback();
+      }
+    };
+    // 휴대폰처럼 공유 창이 있으면 바로 보낸다 (취소하면 아무것도 안 함)
+    if (navigator.share) {
+      navigator.share({ title: '계란이의 모험', text: `${text}\n${location.origin}${location.pathname}` })
+        .catch((err) => { if (!err || err.name !== 'AbortError') copy(); });
+      return;
     }
+    copy();
   }
 
   // ---------- 창: 일시정지 메뉴, 가방, 지난 이야기 ----------
