@@ -1,0 +1,17 @@
+{
+  "name": "계란이의 모험",
+  "short_name": "계란이의 모험",
+  "description": "현대·고대·미래, 세 시대의 계란이가 엄마 품을 찾아 떠나는 A·B·C 선택형 텍스트 어드벤처",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#cfe8f3",
+  "theme_color": "#cfe8f3",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

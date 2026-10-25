@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#cfe8f3">
+<link rel="manifest" href="manifest.webmanifest">
 <!-- @@PAGE-START@@ -->
 <title>계란이의 모험</title>
 <meta name="description" content="현대·고대·미래, 세 시대의 계란이가 엄마 품을 찾아 떠나는 A·B·C 선택형 텍스트 어드벤처">
@@ -51,7 +52,11 @@
       <button type="button" class="btn apps-btn" id="btnApps">은율이의 다른 앱 보기</button>
       <button type="button" class="btn admin-btn" id="btnAdmin" hidden>관리자 뷰어</button>
     </nav>
-    <p class="title-foot" id="titleFoot"></p>
+    <div class="title-foot">
+      <span id="titleFoot"></span>
+      <button type="button" class="foot-link" id="btnNews">새 소식<i class="new-dot" id="newsDot" hidden>NEW</i></button>
+      <button type="button" class="foot-link" id="btnInstall" hidden>앱으로 설치</button>
+    </div>
   </section>
 
   <!-- 이야기 고르기 -->
@@ -167,6 +172,7 @@
     </div>
     <ul class="book-grid" id="bookGrid"></ul>
     <dl class="stats" id="bookStats"></dl>
+    <section class="history" id="bookHistory" aria-label="지난 모험"></section>
   </section>
 
   <!-- 계란 옷장 -->
@@ -197,7 +203,7 @@
     <div class="danger-zone">
       <div>
         <h3>데이터 초기화</h3>
-        <p class="hint">엔딩 도감, 옷장, 기록, 이어하기 저장을 모두 지워요. 설정은 그대로 남아요.</p>
+        <p class="hint">엔딩 도감, 옷장, 기록, 지난 모험, 이어하기 저장을 모두 지워요. 설정은 그대로 남아요.</p>
       </div>
       <button type="button" class="btn danger" id="btnReset">모두 지우기</button>
     </div>
@@ -254,6 +260,7 @@
 <script src="js/story.js"></script>
 <script src="js/events.js"></script>
 <script src="js/meta.js"></script>
+<script src="js/news.js"></script>
 <script src="js/eggs.js"></script>
 <script src="js/art.js"></script>
 <script src="js/art-eggs.js"></script>
@@ -264,6 +271,7 @@
 <script src="js/guide.js"></script>
 <script src="js/game.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/pwa.js"></script>
 <!-- @@PAGE-END@@ -->
 </body>
 </html>

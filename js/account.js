@@ -222,6 +222,7 @@ window.Account = (() => {
       if (hasData(guest)) {
         book = Store.merge(book, guest.book, 'sum');
         run = run || guest.run;
+        Store.moveGuestHistory(user.uid);
         Store.clearGuest();
         UI.toast('이 기기의 게스트 기록을 계정으로 옮겼어요.');
       }

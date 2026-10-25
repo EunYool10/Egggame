@@ -185,7 +185,8 @@
   }
 
   // ---------- 장면 ----------
-  function renderScene() {
+  // seen: 전에 본 장면인지 (설정의 '읽은 글 바로 보기'가 켜져 있으면 글을 한 번에 보인다)
+  function renderScene(seen = false) {
     const sc = S.scenes[st.node];
     const s = story();
     if (UI.current !== 'play') UI.show('play');
@@ -204,12 +205,12 @@
     floaters();
     fadeIn($('dialog'));
     $('btnUndo').disabled = !st.hist.length;
-    typeText(lines(sc.text), (typed) => renderChoices(sc, typed));
+    typeText(lines(sc.text), (typed) => renderChoices(sc, typed), seen && Store.settings.skipSeen);
   }
 
   // 글자가 한 자씩 나타난다. 남은 글자는 투명하게 미리 깔아 두어 줄바꿈이 흔들리지 않는다.
   // done(typed): typed는 글자가 실제로 찍히는 동안 읽었는지 (한 번에 보이기면 false)
-  function typeText(paras, done) {
+  function typeText(paras, done, instant = false) {
     clearInterval(typing);
     typing = null;
     const el = $('text');
@@ -226,7 +227,7 @@
     };
     skip = () => finish(true);
     const speed = SPEED[Store.settings.speed];
-    if (!speed || UI.reduceMotion() || opt('instant')) return finish(false);
+    if (!speed || instant || UI.reduceMotion() || opt('instant')) return finish(false);
     const [step, gap] = speed;
     let i = 0;
     let j = 0;
@@ -423,8 +424,9 @@
       running = true;
       if (!st.path) st.path = [];
       if (!st.path.includes(id)) st.path.push(id);
+      const seen = Boolean(Store.book.scenes[id]);
       Store.markScene(id);
-      renderScene();
+      renderScene(seen);
       save();
     }
     window.scrollTo({ top: 0, behavior: UI.reduceMotion() ? 'auto' : 'smooth' });
@@ -511,7 +513,13 @@
     const no = UI.endingNo(st.node);
     const before = record && skinsBefore ? skinsBefore : openSkins();
     const isNew = record ? Store.markEnding(st.node, st.steps, e.kind) : false;
-    if (record) Store.clearRun();
+    if (record) {
+      Store.clearRun();
+      // 지난 모험 기록 (이 기기에만): 지나온 장소, 엔딩, 마지막 상태
+      const places = [];
+      st.log.forEach((l) => { if (places[places.length - 1] !== l.place) places.push(l.place); });
+      Store.addHistory({ at: Date.now(), story: st.story, ending: st.node, kind: e.kind, steps: st.steps, t: Math.round(st.t * 10) / 10, c: st.c, friends: st.friends.length, places });
+    }
     const unlocked = UI.unlockedSkins().filter((k) => !before.has(k.id));
     if (record) skinsBefore = openSkins(); // 되돌리기로 다른 엔딩을 보면 그 뒤에 열린 것만 알린다
     UI.show('end');

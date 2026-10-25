@@ -266,7 +266,25 @@ window.UI = (() => {
     $('bookTile').textContent = `${seenCount()} / ${endIds.length}`;
     $('closetTile').textContent = `${unlockedSkins().length} / ${visibleSkins().length}`;
     $('titleFoot').textContent = `${M.byline} · v${M.version}`;
+    $('newsDot').hidden = Store.settings.seenNews === M.version;
   }
+
+  // ---------- 새 소식 ----------
+  // 최근 세 버전은 펼쳐 보이고, 그 전 소식은 '지난 소식'에 접어 둔다.
+  function showNews() {
+    const list = window.NEWS || [];
+    const item = (n) => `<section class="news-item"><h3>v${esc(n.v)} <small>${esc(n.date)}</small></h3>` +
+      `<ul>${n.items.map((t) => `<li>${esc(t)}</li>`).join('')}</ul></section>`;
+    modal({
+      title: '새 소식',
+      wide: true,
+      body: list.slice(0, 3).map(item).join('') +
+        (list.length > 3 ? `<details class="news-old"><summary>지난 소식</summary>${list.slice(3).map(item).join('')}</details>` : ''),
+    });
+    Store.set('seenNews', M.version);
+    $('newsDot').hidden = true;
+  }
+  $('btnNews').addEventListener('click', () => { Sound.play('tap'); showNews(); });
 
   // ---------- 은율이의 다른 앱 ----------
   function showApps() {
@@ -360,6 +378,24 @@ window.UI = (() => {
         `<span class="meta"><span class="no">엔딩 ${pad(i + 1)} · ${rec.n}번 봄</span><span class="nm">${esc(e.title)}</span>` +
         `<span class="kd">${KIND[e.kind]}</span><button type="button" class="hint-btn" data-detail="${id}">다시 읽기</button></span></li>`;
     }).join('');
+    renderHistory(s);
+  }
+  // 지난 모험 (이 기기에 남은 최근 기록 가운데 이 이야기 것)
+  const when = (at) => {
+    const d = new Date(at);
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+  function renderHistory(s) {
+    const list = Store.history().filter((h) => h.story === s.id && S.endings[h.ending]);
+    const route = (places) => (places.length > 6 ? [...places.slice(0, 3), '…', ...places.slice(-2)] : places).map(esc).join(' → ');
+    $('bookHistory').innerHTML = '<h3>지난 모험 <small>이 기기에 남은 최근 기록</small></h3>' + (list.length
+      ? `<ol class="history-list">${list.map((h) => {
+        const e = S.endings[h.ending];
+        return `<li data-kind="${e.kind}"><span class="when">${when(h.at)}</span><b>${esc(e.title)}</b><span class="kd">${KIND[e.kind]}</span>` +
+          `<span class="h-route">${route(h.places || [])}</span>` +
+          `<span class="facts">선택 ${h.steps}번 · 온기 ${h.t}℃ · 금 ${h.c}개 · 친구 ${h.friends}명</span></li>`;
+      }).join('')}</ol>`
+      : '<p class="hint">아직 이 이야기를 끝까지 간 기록이 없어요. 엔딩을 보면 여기에 지나온 길이 남아요.</p>');
   }
   $('bookTabs').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-tab]');
@@ -469,6 +505,7 @@ window.UI = (() => {
       group: '게임', key: 'difficulty', name: '미니게임 난이도', type: 'seg', opts: [['easy', '쉬움'], ['normal', '보통'], ['hard', '어려움']],
       desc: '쉬움은 칸이 넓고, 시간이 넉넉하고, 피하기 게임에서 한 번 더 부딪혀도 괜찮아요.',
     },
+    { group: '게임', key: 'skipSeen', name: '읽은 글 바로 보기', type: 'toggle', desc: '전에 본 장면은 글이 한 글자씩 나오지 않고 한 번에 보여요. 여러 번 플레이할 때 편해요.' },
   ];
 
   function renderSettings() {
@@ -509,7 +546,7 @@ window.UI = (() => {
 
   $('btnReset').addEventListener('click', () => confirmBox({
     title: '모든 기록을 지울까요?',
-    text: '엔딩 도감, 계란 옷장, 플레이 기록, 이어하기 저장이 모두 사라져요. 되돌릴 수 없어요.',
+    text: '엔딩 도감, 계란 옷장, 플레이 기록, 지난 모험, 이어하기 저장이 모두 사라져요. 되돌릴 수 없어요.',
     ok: '모두 지우기',
     danger: true,
     run: () => {

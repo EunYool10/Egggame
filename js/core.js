@@ -3,7 +3,8 @@
 window.Store = (() => {
   'use strict';
 
-  const KEY = { settings: 'egg2:settings', run: 'egg2:run', book: 'egg2:book', v1: 'egg-adventure:endings' };
+  const KEY = { settings: 'egg2:settings', run: 'egg2:run', book: 'egg2:book', history: 'egg2:history', v1: 'egg-adventure:endings' };
+  const HISTORY_LIMIT = 20; // 지난 모험은 이 기기에 최근 20번만 둔다 (계정에는 올리지 않는다)
   const DEFAULTS = {
     speed: 'normal', // slow · normal · fast · instant
     size: 'm', // s · m · l
@@ -16,6 +17,8 @@ window.Store = (() => {
     motion: 'system', // system · reduce
     skin: 'white',
     seenHelp: false, // 플레이 방법을 한 번 봤는지
+    skipSeen: false, // 전에 본 장면의 글은 한 번에 보이기
+    seenNews: '', // 마지막으로 읽은 새 소식의 버전 (다르면 타이틀에 NEW 표시)
   };
 
   function read(key, fallback) {
@@ -121,6 +124,14 @@ window.Store = (() => {
       return { book: withV1(normalize(read(KEY.book, null))), run: read(KEY.run, null) };
     },
     clearGuest() { [KEY.book, KEY.run, KEY.v1].forEach(remove); },
+    // 게스트의 지난 모험 기록은 로그인한 계정 쪽으로 옮겨 둔다
+    moveGuestHistory(id) {
+      const guest = read(KEY.history, []);
+      if (!Array.isArray(guest) || !guest.length || !id || id === 'guest') return;
+      const mine = read(`${KEY.history}:${id}`, []);
+      write(`${KEY.history}:${id}`, [...guest, ...(Array.isArray(mine) ? mine : [])].sort((a, b) => (b.at || 0) - (a.at || 0)).slice(0, HISTORY_LIMIT));
+      remove(KEY.history);
+    },
     // 엔딩 기록. 처음 본 엔딩이면 true
     markEnding(id, steps, kind) {
       const fresh = !book.endings[id];
@@ -140,6 +151,14 @@ window.Store = (() => {
     },
     countPlay() { book.stats.plays += 1; saveBook(); },
     countChoice() { book.stats.choices += 1; saveBook(); },
+    // 지난 모험 기록: 최근 것이 맨 앞
+    history() {
+      const list = read(keyOf(KEY.history), []);
+      return Array.isArray(list) ? list.filter((h) => h && typeof h === 'object' && h.ending) : [];
+    },
+    addHistory(entry) {
+      write(keyOf(KEY.history), [entry, ...this.history()].slice(0, HISTORY_LIMIT));
+    },
     loadRun() { return read(keyOf(KEY.run), null); },
     saveRun(run) {
       const ok = write(keyOf(KEY.run), { ...run, savedAt: Date.now() });
@@ -155,7 +174,7 @@ window.Store = (() => {
       changed('run');
     },
     resetAll() {
-      [keyOf(KEY.run), keyOf(KEY.book)].forEach(remove);
+      [keyOf(KEY.run), keyOf(KEY.book), keyOf(KEY.history)].forEach(remove);
       if (profile === 'guest') remove(KEY.v1);
       book = emptyBook();
       changed('reset');

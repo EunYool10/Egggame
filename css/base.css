@@ -217,7 +217,34 @@ h1[tabindex="-1"]:focus, h2[tabindex="-1"]:focus { outline: none; }
 .tile:hover { background: var(--yolk-soft); }
 .tile:active { transform: translateY(3px); box-shadow: 0 0 0 var(--drop); }
 .tile small { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.title-foot { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.title-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 14px; margin: 0; font-size: 0.85rem; color: var(--muted); }
+.foot-link { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 2px 2px; border: 0; background: none; color: var(--muted); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.foot-link:hover { color: var(--ink); }
+.new-dot { padding: 0 6px; border-radius: 99px; background: var(--danger); color: #fff; font-size: 0.66rem; font-style: normal; font-weight: 700; letter-spacing: 0.04em; text-decoration: none; }
+/* 새 소식 */
+.news-item h3 { margin: 0 0 4px; font-family: var(--f-display); font-weight: 400; font-size: 1.1rem; }
+.news-item h3 small { font-family: var(--f-ui); font-size: 0.78rem; color: var(--muted); }
+.news-item ul { display: grid; gap: 4px; margin: 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.55; }
+.news-item + .news-item, .news-old { padding-top: 10px; border-top: 1.5px solid var(--line); }
+.news-old summary { cursor: pointer; color: var(--muted); }
+.news-old .news-item { margin-top: 10px; }
+.install-steps { display: grid; gap: 6px; margin: 0; padding-left: 22px; line-height: 1.55; }
+/* 엔딩 도감 · 지난 모험 */
+.history { display: grid; gap: 10px; }
+.history h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 1.2rem; }
+.history h3 small { font-family: var(--f-ui); font-size: 0.78rem; color: var(--muted); }
+.history-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.history-list li { display: grid; gap: 2px; padding: 10px 12px; border: 2px solid var(--line); border-left: 6px solid var(--k, var(--edge)); border-radius: var(--r-sm); background: var(--paper); }
+.history-list .when { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.history-list b { font-family: var(--f-display); font-weight: 400; font-size: 1.02rem; }
+.history-list .kd { font-size: 0.75rem; color: var(--k); }
+.history-list .h-route { font-size: 0.85rem; line-height: 1.5; }
+.history-list .facts { font-size: 0.78rem; color: var(--muted); }
+.history-list li { --k: var(--k-normal); }
+.history-list li[data-kind="true"] { --k: var(--k-true); }
+.history-list li[data-kind="happy"] { --k: var(--k-happy); }
+.history-list li[data-kind="hidden"] { --k: var(--k-hidden); }
+.history-list li[data-kind="bad"] { --k: var(--k-bad); }
 /* 은율이의 다른 앱 */
 .menu .apps-btn { min-height: 44px; font-size: 0.95rem; }
 .apps-btn svg { flex: none; width: 20px; height: 20px; color: var(--muted); }
