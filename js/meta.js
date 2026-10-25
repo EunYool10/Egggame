@@ -142,7 +142,7 @@ window.META = {
   // 크레딧. names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 (specsTitle이 표 제목)
   credits: [
     { role: '메인개발', names: ['은율'] },
-    { role: 'QATEST', names: ['은율', '지우', "윤아"] },
+    { role: 'QATEST', names: ['은율', '지우', "윤아", '수빈', '하윤'] },
     { role: '아이디어', names: ['지우'] },
     { role: '디자인', names: ['YDS','지우'] },
     { role: '공동투자', names: ['YDS', 'TDS', 'TDSHQ', 'TDSNT'] },
