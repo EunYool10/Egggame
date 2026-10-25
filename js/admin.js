@@ -33,9 +33,23 @@ window.Admin = (() => {
   };
 
   const TABS = [['run', '진행 상태'], ['map', '장면 지도'], ['ends', '엔딩'], ['records', '기록'], ['gallery', '그림'], ['games', '미니게임'], ['options', '옵션']];
+  const TAB_ICONS = {
+    run: '<circle cx="16" cy="16" r="11"/><path d="M13 11 L21 16 L13 21 Z"/>',
+    map: '<path d="M4 8 L12 5 L20 8 L28 5 V24 L20 27 L12 24 L4 27 Z M12 5 V24 M20 8 V27"/>',
+    ends: '<path d="M4 6 C8 4 12 4 16 6 V26 C12 24 8 24 4 26 Z M16 6 C20 4 24 4 28 6 V26 C24 24 20 24 16 26"/>',
+    records: '<path d="M6 26 V16 M13 26 V10 M20 26 V18 M27 26 V6"/>',
+    gallery: '<rect x="4" y="6" width="24" height="20" rx="3"/><circle cx="12" cy="13" r="2.5"/><path d="M4 23 L12 17 L18 21 L22 18 L28 23"/>',
+    games: '<rect x="3" y="10" width="26" height="14" rx="7"/><path d="M10 14 V20 M7 17 H13"/><circle cx="21" cy="15" r="1.4"/><circle cx="24" cy="19" r="1.4"/>',
+    options: '<circle cx="16" cy="16" r="4"/><path d="M16 4 v4 M16 24 v4 M4 16 h4 M24 16 h4 M7.5 7.5 l2.8 2.8 M21.7 21.7 l2.8 2.8 M7.5 24.5 l2.8 -2.8 M21.7 10.3 l2.8 -2.8"/>',
+  };
+  const tabIcon = (k) => `<svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${TAB_ICONS[k]}</svg>`;
   let tab = 'run';
   let storyTab = S.stories[0].id;
   let galleryTab = 'bg';
+  let endShow = 'all'; // 엔딩 탭 거르기: all · got · not
+  let endKind = 'all'; // all 또는 엔딩 종류
+  let skinQuery = ''; // 그림 탭 계란 찾기
+  let skinGroup = 'all'; // all · player · staff
 
   // ---------- 도우미 ----------
   const placeOf = (id) => (S.scenes[id] && S.scenes[id].place) || (S.endings[id] && S.endings[id].title) || id;
@@ -134,20 +148,27 @@ window.Admin = (() => {
     const s = UI.storyOf(storyTab);
     const ids = Object.keys(s.endings);
     const book = Store.book;
+    const got = ids.filter((id) => book.endings[id]).length;
+    const shown = ids.filter((id) => (endShow === 'all' || (endShow === 'got') === Boolean(book.endings[id])) && (endKind === 'all' || s.endings[id].kind === endKind));
+    const chips = (list, cur, act) => `<div class="adm-filter">${list.map(([v, name]) =>
+      `<button type="button" class="adm-chip${cur === v ? ' on' : ''}" data-a="${act}" data-v="${v}" aria-pressed="${cur === v}">${name}</button>`).join('')}</div>`;
     return storyTabs() +
-      `<div class="row"><button type="button" class="btn small" data-a="markStory">이 이야기 엔딩 모두 기록</button>` +
-      '<button type="button" class="btn small danger" data-a="clearStory">이 이야기 엔딩 기록 지우기</button></div>' +
-      '<p class="hint">보기는 도감에 기록하지 않는 미리 보기예요. 기록하기를 누르면 도감과 옷장 해금에 바로 반영돼요.</p>' +
-      `<ul class="book-grid adm-ends">${ids.map((id, i) => {
+      `<div class="adm-toolbar"><span class="adm-count">본 엔딩 <b>${got}</b> / ${ids.length}</span>` +
+      '<button type="button" class="btn small" data-a="markStory">모두 기록</button>' +
+      '<button type="button" class="btn small danger" data-a="clearStory">기록 지우기</button></div>' +
+      chips([['all', '전체'], ['got', '본 것'], ['not', '안 본 것']], endShow, 'endShow') +
+      chips([['all', '모든 종류'], ...Object.entries(KIND)], endKind, 'endKind') +
+      '<p class="hint">미리 보기는 도감에 남기지 않아요. 도감 버튼으로 기록을 켜고 끄면 옷장 해금에도 바로 반영돼요.</p>' +
+      (shown.length ? `<ul class="adm-ends">${shown.map((id) => {
         const e = s.endings[id];
         const rec = book.endings[id];
-        return `<li class="book-card${rec ? ' got' : ''}" data-kind="${e.kind}"><span class="thumb egg">${UI.endingArt(e)}</span>` +
-          `<span class="meta"><span class="no">엔딩 ${pad(i + 1)} · ${rec ? `${rec.n}번 봄` : '아직 안 봄'}</span><span class="nm">${esc(e.title)}</span>` +
-          `<span class="kd">${KIND[e.kind]} · <code>${esc(id)}</code></span>` +
-          `<span class="row adm-row"><button type="button" class="btn small" data-a="jump" data-id="${id}">보기</button>` +
-          `<button type="button" class="btn small" data-a="read" data-id="${id}">글 읽기</button>` +
-          `<button type="button" class="btn small" data-a="mark" data-id="${id}">${rec ? '기록 지우기' : '기록하기'}</button></span></span></li>`;
-      }).join('')}</ul>`;
+        return `<li class="adm-end${rec ? ' got' : ''}" data-kind="${e.kind}"><span class="thumb egg">${UI.endingArt(e)}</span>` +
+          `<span class="meta"><span class="no">엔딩 ${pad(ids.indexOf(id) + 1)} · <span class="kd">${KIND[e.kind]}</span> · ${rec ? `${rec.n}번 봄` : '안 봄'}</span>` +
+          `<b class="nm">${esc(e.title)}</b><code>${esc(id)}</code></span>` +
+          `<span class="adm-acts"><button type="button" class="adm-mini" data-a="jump" data-id="${id}">미리 보기</button>` +
+          `<button type="button" class="adm-mini" data-a="read" data-id="${id}">글 읽기</button>` +
+          `<button type="button" class="adm-mini mark${rec ? ' on' : ''}" data-a="mark" data-id="${id}" aria-pressed="${Boolean(rec)}">${rec ? '도감 ✓' : '도감에 기록'}</button></span></li>`;
+      }).join('')}</ul>` : '<p class="adm-empty">조건에 맞는 엔딩이 없어요.</p>');
   }
 
   // ---------- 탭: 기록 ----------
@@ -165,13 +186,15 @@ window.Admin = (() => {
       ['고른 선택지', `${st.choices}개`], ['최단 진엔딩', st.bestTrue == null ? '-' : `선택 ${st.bestTrue}번`],
       ['스킨', `${UI.unlockedSkins().length}/${UI.visibleSkins().length}`], ...per,
     ])) +
-      card('한 번에 바꾸기', '<div class="row">' +
+      card('한 번에 채우기', '<div class="row">' +
         '<button type="button" class="btn small" data-a="markAll">모든 엔딩 기록</button>' +
-        '<button type="button" class="btn small" data-a="scenesAll">모든 장면 기록</button>' +
+        '<button type="button" class="btn small" data-a="scenesAll">모든 장면 기록</button></div>' +
+        '<p class="hint">도감을 바꾸면 계란 옷장의 해금도 바로 따라 바뀌어요.</p>') +
+      `<section class="adm-card adm-danger"><h3>되돌릴 수 없는 작업</h3><div class="row">` +
         '<button type="button" class="btn small danger" data-a="clearBook">도감 비우기</button>' +
         '<button type="button" class="btn small danger" data-a="clearStats">플레이 기록 0으로</button>' +
         '<button type="button" class="btn small danger" data-a="clearRun">이어하기 저장 지우기</button></div>' +
-        '<p class="hint">도감을 바꾸면 계란 옷장의 해금도 바로 따라 바뀌어요.</p>') +
+        '<p class="hint">누르면 한 번 더 물어봐요. 로그인한 계정의 기록도 함께 바뀌어요.</p></section>' +
       card('기록 내보내기 · 가져오기',
         '<p class="hint">이 기기의 도감, 플레이 기록, 이어하기를 글자(JSON)로 옮겨요. 다른 기기의 가져오기에 붙여 넣으면 그대로 옮겨져요.</p>' +
         '<textarea class="share-text adm-json" id="admJson" rows="6" spellcheck="false" aria-label="기록 JSON"></textarea>' +
@@ -196,7 +219,15 @@ window.Admin = (() => {
     }
     if (galleryTab === 'skins') {
       const cur = UI.currentSkin().id;
-      return head + `<ul class="adm-gallery">${M.skins.map((k) =>
+      const q = skinQuery.trim().toLowerCase();
+      const list = M.skins.filter((k) => (skinGroup === 'all' || (skinGroup === 'staff') === UI.staffOnly(k)) &&
+        (!q || k.name.toLowerCase().includes(q) || k.id.includes(q) || (k.desc || '').includes(q)));
+      return head + '<div class="adm-search">' +
+        `<input type="search" id="admSkinQuery" placeholder="계란 이름으로 찾기 (예: 판다, 명찰)" value="${esc(skinQuery)}" aria-label="계란 찾기">` +
+        segBtns([['all', `전체 ${M.skins.length}`], ['player', `일반 ${M.skins.filter((k) => !UI.staffOnly(k)).length}`], ['staff', `운영진 ${M.skins.filter(UI.staffOnly).length}`]], skinGroup, 'skinGroup') +
+        `<span class="adm-count"><b>${list.length}</b>종</span></div>` +
+        (list.length ? '' : '<p class="adm-empty">찾는 계란이 없어요.</p>') +
+        `<ul class="adm-gallery">${list.map((k) =>
         `<li><span class="egg">${Art.egg(k, { mood: 'happy', label: k.name })}</span><b>${esc(k.name)}</b><small>${esc(UI.condText(k))}</small>` +
         `<button type="button" class="btn small${k.id === cur ? ' on' : ''}" data-a="wear" data-id="${k.id}">${k.id === cur ? '입는 중' : '입기'}</button></li>`).join('')}</ul>`;
     }
@@ -234,16 +265,33 @@ window.Admin = (() => {
         'Google 로그인으로 인증된 이메일만 비교해요.</p>');
   }
 
+  // 맨 위 요약판: 모은 것과 지금 상태
+  function summary() {
+    const book = Store.book;
+    const scenes = Object.keys(S.scenes).filter((id) => !S.scenes[id].branch);
+    const run = G().running ? G().state : null;
+    const saved = Store.loadRun();
+    const now = run ? `${esc(UI.storyOf(run.story).era)} · ${esc(S.scenes[run.node] ? S.scenes[run.node].place : '')}` : saved && S.scenes[saved.node] ? '이어하기 저장 있음' : '쉬는 중';
+    const box = (k, v, sub) => `<div><dt>${k}</dt><dd>${v}</dd>${sub ? `<small>${sub}</small>` : ''}</div>`;
+    return `<dl class="adm-sum">${box('엔딩', `${UI.seenCount()}<small>/${UI.endIds.length}</small>`)}` +
+      box('장면', `${scenes.filter((id) => book.scenes[id]).length}<small>/${scenes.length}</small>`) +
+      box('계란', `${UI.unlockedSkins().length}<small>/${UI.visibleSkins().length}</small>`) +
+      box('지금', `<span class="adm-now">${now}</span>`) + '</dl>' +
+      `<p class="adm-power${opts.player ? ' off' : ''}">${opts.player ? '관리자 권한 꺼짐 · 일반 플레이어로 보는 중 (옵션 탭에서 켜기)' : '관리자 권한 켜짐'}</p>`;
+  }
+
   const PANELS = { run: panelRun, map: panelMap, ends: panelEnds, records: panelRecords, gallery: panelGallery, games: panelGames, options: panelOptions };
 
   function render() {
     if (!window.App.adminAccount) {
+      $('adminSummary').innerHTML = '';
       $('adminTabs').innerHTML = '';
       $('adminPanel').innerHTML = card('관리자 계정이 아니에요', '<p class="hint">관리자로 등록된 Google 계정으로 로그인하면 볼 수 있어요.</p>');
       return;
     }
+    $('adminSummary').innerHTML = summary();
     $('adminTabs').innerHTML = TABS.map(([id, name]) =>
-      `<button type="button" class="tab" role="tab" data-atab="${id}" aria-selected="${id === tab}">${name}</button>`).join('');
+      `<button type="button" class="tab" role="tab" data-atab="${id}" aria-selected="${id === tab}">${tabIcon(id)}<span>${name}</span></button>`).join('');
     $('adminPanel').innerHTML = PANELS[tab]();
     $('adminPanel').dataset.tab = tab;
   }
@@ -310,6 +358,9 @@ window.Admin = (() => {
       case 'clearBag': G().update((st) => { st.bag = []; st.friends = []; }); break;
       // 장면 지도 · 엔딩
       case 'stab': storyTab = id; break;
+      case 'endShow': endShow = v; break;
+      case 'endKind': endKind = v; break;
+      case 'skinGroup': skinGroup = v; break;
       case 'jump': G().jump(id); return;
       case 'read': UI.endingDetail(id); return;
       case 'mark':
@@ -375,6 +426,14 @@ window.Admin = (() => {
   });
 
   $('adminPanel').addEventListener('input', (ev) => {
+    if (ev.target.id === 'admSkinQuery') {
+      skinQuery = ev.target.value;
+      render();
+      const box = $('admSkinQuery');
+      box.focus();
+      box.setSelectionRange(box.value.length, box.value.length);
+      return;
+    }
     if (ev.target.dataset.a !== 'temp') return;
     const t = Number(ev.target.value);
     G().update((st) => { st.t = t; });
