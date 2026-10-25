@@ -135,6 +135,8 @@ window.META = {
     '0fb796c775ff6016ae8ab23da77dcf7ac12ef11389717e7dd20e3a491e80f6cb',
     '899be75ddd7505b1852e53a9a64121e0169f49938f7a9611ce44a9efdd1afd4f',
     'c0ac4e48f1b66bee8c22e87f8d851320711571d9cbb09ccab64f40a322c43442',
+    '42246c5eeb1fb490a985e77863b823b18b3401eb3083b2465e2810fc67ecfc8d',
+    '1c2e2710564b12ccd2cef97f1dc8934094fa7ffaa0757be7ce566cb48101ebba',
   ],
 
   // 크레딧. names: 한 줄씩 크게, specs: [항목, 내용] 표로 작게 (specsTitle이 표 제목)
