@@ -1,6 +1,6 @@
 // 계란이의 모험 v3 — 아이템, 친구, 계란 스킨, 제작 크레딧
 window.META = {
-  version: '3.8.1',
+  version: '3.8.2',
 
   // 가방에 들어가는 아이템. shield: 금이 갈 충격을 한 번 막는다 (short는 상단 표시, block은 막았을 때 문장)
   items: {
@@ -125,6 +125,7 @@ window.META = {
     { name: '상큼 과일 아케이드 존', url: 'https://eunyool10.github.io/FruitArcade/', icon: 'img/apps/fruitarcade.png', color: '#f2456f', desc: '과일 메모리, 수박 게임, 과일 자르기… 오늘의 미션에 도전하는 과일 미니게임 모음.' },
     { name: '논리 미궁: 대우의 열쇠', url: 'https://eunyool10.github.io/LogicMaze/', icon: 'img/apps/logicmaze.svg', color: '#b8924a', desc: '원래 명제의 대우를 골라 다섯 개의 방을 탈출하는 논리 퀴즈 게임.' },
     { name: 'SchoolFix', url: 'https://schoolfix.onrender.com/', icon: 'img/apps/schoolfix.png', color: '#1d4ed8', slow: true, desc: '학교의 불편한 점과 시설 안전 문제를 신고하고 함께 고쳐 가는 서비스.' },
+    { name: 'AI Hub', url: 'https://eunyool10.github.io/AI-Hub-By-EunYool/', icon: 'img/apps/aihub.png', color: '#6a5cff', desc: '분야별로 정리한 AI 도구를 검색하고 비교하는 AI 도구 모음.' },
   ],
 
   // 관리자(운영진) 계정: 'egggame:' + 소문자 이메일의 SHA-256 해시 (공개 저장소에 이메일을 그대로 두지 않으려고 해시만 둔다).
