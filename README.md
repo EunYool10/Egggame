@@ -39,7 +39,7 @@ Node.js가 있다면 `npm start`로 http://localhost:3000 에서 띄울 수도 �
 | 글꼴 | Google Fonts (Jua · Gowun Batang · Gowun Dodum, SIL Open Font License) |
 | 서버 | Node.js 내장 http 모듈, 외부 패키지 없음 |
 | 배포 | GitHub · Render |
-| 개발 도구 | Visual Studio Code · Git · Claude Code |
+| 개발 도구 | Visual Studio Code · Git |
 
 프레임워크, 라이브러리, 빌드 도구 없이 만든 정적 웹앱입니다. 음원 파일 없이 소리는 Web Audio로, 계란이와 배경 그림은 SVG로 코드에서 만듭니다. (이미지 파일은 마스코트·아이콘과 '다른 앱' 아이콘뿐입니다.)
 
